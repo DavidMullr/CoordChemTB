@@ -1,2 +1,3 @@
 print("test")
-print("test2")
+x = 4 + 5
+print(x)
