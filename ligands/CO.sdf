@@ -1,0 +1,37 @@
+
+     RDKit          3D
+
+  2  1  0  0  0  0  0  0  0  0999 V2000
+    0.5641    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -0.5641    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  3  0
+M  CHG  2   1  -1   2   1
+M  END
+>  <LigandName>  (1) 
+CO
+
+>  <SMILES>  (1) 
+[C-]#[O+]
+
+>  <FieldStrength>  (1) 
+very strong
+
+>  <MolecularWeight>  (1) 
+28.01
+
+>  <HDonors>  (1) 
+0
+
+>  <HAcceptors>  (1) 
+0
+
+>  <LogP>  (1) 
+-0.04
+
+>  <NumAtoms>  (1) 
+2
+
+>  <NetFormalCharge>  (1) 
+0
+
+$$$$
