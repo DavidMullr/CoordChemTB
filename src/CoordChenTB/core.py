@@ -1,3 +1,3 @@
 print("test")
-print("test2")
-print("test3")
+x = 4 + 5
+print(x)
