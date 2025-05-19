@@ -50,6 +50,7 @@ for lig_id in default_ligand_ids:
 import re
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
+from rdkit.Geometry import Point3D
 
 # Ligands: name -> (SMILES, field strength)
 ligands = {
@@ -112,11 +113,23 @@ for name, (smiles, field_strength) in ligands.items():
 
   # Adding hydrogens and generating 3D geometry
 
+    # Adding hydrogens and generating 3D geometry
     mol = Chem.AddHs(mol)
-    if AllChem.EmbedMolecule(mol, AllChem.ETKDG()) != 0:
-        print(f"⚠️  3D embedding failed: {name}")
-        continue
-    AllChem.UFFOptimizeMolecule(mol)
+
+    if mol.GetNumAtoms() == 1:
+        # Monoatomic ligand — manually assign a position
+        conf = Chem.Conformer(1)
+        conf.SetAtomPosition(0, Point3D(4.0, 0.0, 0.0))  # place away from origin
+        mol.RemoveAllConformers()
+        mol.AddConformer(conf)
+        print(f"📍 Manually positioned monoatomic ligand: {name}")
+    else:
+        # Multi-atom ligand — embed normally
+        if AllChem.EmbedMolecule(mol, AllChem.ETKDG()) != 0:
+            print(f"⚠️  3D embedding failed: {name}")
+            continue
+        AllChem.UFFOptimizeMolecule(mol)
+
 
 # Setting metadata fields
     mol.SetProp("LigandName", name)
