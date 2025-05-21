@@ -17,6 +17,24 @@ ACT
   4  7  1  0
 M  CHG  1   3  -1
 M  END
+>  <LigandName>  (1) 
+ACT
+
+>  <Denticity>  (1) 
+3
+
+>  <DenticityDescription>  (1) 
+tridentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]C([H])([H])C(=O)[O-]
+
 >  <NetFormalCharge>  (1) 
 -1
 

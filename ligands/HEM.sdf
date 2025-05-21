@@ -167,6 +167,24 @@ M  V30 82 9 42 43
 M  V30 END BOND
 M  V30 END CTAB
 M  END
+>  <LigandName>  (1) 
+HEM
+
+>  <Denticity>  (1) 
+4
+
+>  <DenticityDescription>  (1) 
+tetradentate
+
+>  <Delta_cm-1>  (1) 
+22000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]OC(=O)C([H])([H])C([H])([H])C1=C(C([H])([H])[H])C2=[N]3->[Fe@SP3]45<-[N]6=C(C(C([H])=C([H])[H])=C(C([H])([H])[H])/C6=C(\[H])c6c(C([H])([H])[H])c(C([H])([H])C([H])([H])C(=O)O[H])c([n]64)/C([H])=C/13)/C([H])=c1/c(C([H])([H])[H])c(C([H])=C([H])[H])/c([n]15)=C/2[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

@@ -19,6 +19,18 @@ N=C=S
 >  <FieldStrength>  (1) 
 moderate
 
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DonorAtom>  (1) 
+N
+
+>  <Denticity>  (1) 
+0
+
+>  <DenticityDescription>  (1) 
+non-dentate
+
 >  <MolecularWeight>  (1) 
 59.09
 

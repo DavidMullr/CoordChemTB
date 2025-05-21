@@ -8,6 +8,24 @@ ACE
   1  2  2  0
   1  3  1  0
 M  END
+>  <LigandName>  (1) 
+ACE
+
+>  <Denticity>  (1) 
+0
+
+>  <DenticityDescription>  (1) 
+non-dentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+default
+
+>  <SMILES>  (1) 
+[H]C(=O)C([H])([H])[H]
+
 >  <NetFormalCharge>  (1) 
 0
 
@@ -33,6 +51,18 @@ CC(=O)[O-]
 
 >  <FieldStrength>  (2) 
 moderate
+
+>  <Delta_cm-1>  (2) 
+20000
+
+>  <DonorAtom>  (2) 
+O,O
+
+>  <Denticity>  (2) 
+3
+
+>  <DenticityDescription>  (2) 
+tridentate
 
 >  <MolecularWeight>  (2) 
 59.04
@@ -66,6 +96,24 @@ ACT
   1  4  1  0
 M  CHG  1   3  -1
 M  END
+>  <LigandName>  (3) 
+ACT
+
+>  <Denticity>  (3) 
+3
+
+>  <DenticityDescription>  (3) 
+tridentate
+
+>  <Delta_cm-1>  (3) 
+20000
+
+>  <DeltaConfidence>  (3) 
+estimated
+
+>  <SMILES>  (3) 
+[H]C([H])([H])C(=O)[O-]
+
 >  <NetFormalCharge>  (3) 
 -1
 
@@ -131,6 +179,24 @@ ADP
  25 26  1  0
  26 27  2  0
 M  END
+>  <LigandName>  (4) 
+ADP
+
+>  <Denticity>  (4) 
+12
+
+>  <DenticityDescription>  (4) 
+12-dentate
+
+>  <Delta_cm-1>  (4) 
+22916
+
+>  <DeltaConfidence>  (4) 
+estimated
+
+>  <SMILES>  (4) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])O[P@](=O)(O[H])OP(=O)(O[H])O[H]
+
 >  <NetFormalCharge>  (4) 
 0
 
@@ -188,6 +254,24 @@ AMP
  21 22  1  0
  22 23  2  0
 M  END
+>  <LigandName>  (5) 
+AMP
+
+>  <Denticity>  (5) 
+10
+
+>  <DenticityDescription>  (5) 
+10-dentate
+
+>  <Delta_cm-1>  (5) 
+22700
+
+>  <DeltaConfidence>  (5) 
+estimated
+
+>  <SMILES>  (5) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])OP(=O)(O[H])O[H]
+
 >  <NetFormalCharge>  (5) 
 0
 
@@ -219,6 +303,18 @@ c1ccccc1N
 
 >  <FieldStrength>  (6) 
 moderate
+
+>  <Delta_cm-1>  (6) 
+21000
+
+>  <DonorAtom>  (6) 
+N
+
+>  <Denticity>  (6) 
+1
+
+>  <DenticityDescription>  (6) 
+monodentate
 
 >  <MolecularWeight>  (6) 
 93.13
@@ -308,6 +404,24 @@ ATP
  29 30  1  0
  30 31  2  0
 M  END
+>  <LigandName>  (7) 
+ATP
+
+>  <Denticity>  (7) 
+14
+
+>  <DenticityDescription>  (7) 
+14-dentate
+
+>  <Delta_cm-1>  (7) 
+23071
+
+>  <DeltaConfidence>  (7) 
+estimated
+
+>  <SMILES>  (7) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])O[P@@](=O)(O[H])O[P@](=O)(O[H])OP(=O)(O[H])O[H]
+
 >  <NetFormalCharge>  (7) 
 0
 
@@ -319,6 +433,24 @@ BA
     0.0000    0.0000    0.0000 Ba  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (8) 
+BA
+
+>  <Denticity>  (8) 
+0
+
+>  <DenticityDescription>  (8) 
+non-dentate
+
+>  <Delta_cm-1>  (8) 
+20000
+
+>  <DeltaConfidence>  (8) 
+default
+
+>  <SMILES>  (8) 
+[Ba+2]
+
 >  <NetFormalCharge>  (8) 
 2
 
@@ -361,6 +493,18 @@ c1ccnc(c1)c2ccccn2
 
 >  <FieldStrength>  (9) 
 strong
+
+>  <Delta_cm-1>  (9) 
+26000
+
+>  <DonorAtom>  (9) 
+N,N
+
+>  <Denticity>  (9) 
+2
+
+>  <DenticityDescription>  (9) 
+bidentate
 
 >  <MolecularWeight>  (9) 
 156.19
@@ -410,6 +554,24 @@ BMA
   5 11  1  0
   6 12  1  0
 M  END
+>  <LigandName>  (10) 
+BMA
+
+>  <Denticity>  (10) 
+5
+
+>  <DenticityDescription>  (10) 
+pentadentate
+
+>  <Delta_cm-1>  (10) 
+20000
+
+>  <DeltaConfidence>  (10) 
+estimated
+
+>  <SMILES>  (10) 
+[H]OC([H])([H])[C@@]1([H])O[C@@]([H])(O[H])[C@@]([H])(O[H])[C@@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (10) 
 0
 
@@ -421,6 +583,24 @@ BR
     0.0000    0.0000    0.0000 Br  0  0  0  0  0  0  0  0  0  0  0  0
 M  CHG  1   1  -1
 M  END
+>  <LigandName>  (11) 
+BR
+
+>  <Denticity>  (11) 
+1
+
+>  <DenticityDescription>  (11) 
+monodentate
+
+>  <Delta_cm-1>  (11) 
+12000
+
+>  <DeltaConfidence>  (11) 
+estimated
+
+>  <SMILES>  (11) 
+[Br-]
+
 >  <NetFormalCharge>  (11) 
 -1
 
@@ -440,6 +620,18 @@ Br⁻
 
 >  <FieldStrength>  (12) 
 very weak
+
+>  <Delta_cm-1>  (12) 
+12000
+
+>  <DonorAtom>  (12) 
+Br
+
+>  <Denticity>  (12) 
+1
+
+>  <DenticityDescription>  (12) 
+monodentate
 
 >  <MolecularWeight>  (12) 
 79.9
@@ -486,6 +678,18 @@ O=C([O-])C(=O)[O-]
 >  <FieldStrength>  (13) 
 moderate
 
+>  <Delta_cm-1>  (13) 
+20000
+
+>  <DonorAtom>  (13) 
+O,O
+
+>  <Denticity>  (13) 
+6
+
+>  <DenticityDescription>  (13) 
+hexadentate
+
 >  <MolecularWeight>  (13) 
 88.02
 
@@ -512,6 +716,24 @@ CA
     0.0000    0.0000    0.0000 Ca  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (14) 
+CA
+
+>  <Denticity>  (14) 
+0
+
+>  <DenticityDescription>  (14) 
+non-dentate
+
+>  <Delta_cm-1>  (14) 
+20000
+
+>  <DeltaConfidence>  (14) 
+default
+
+>  <SMILES>  (14) 
+[Ca+2]
+
 >  <NetFormalCharge>  (14) 
 2
 
@@ -531,6 +753,18 @@ CH₃⁻
 
 >  <FieldStrength>  (15) 
 very strong
+
+>  <Delta_cm-1>  (15) 
+31000
+
+>  <DonorAtom>  (15) 
+C
+
+>  <Denticity>  (15) 
+0
+
+>  <DenticityDescription>  (15) 
+non-dentate
 
 >  <MolecularWeight>  (15) 
 15.03
@@ -558,6 +792,24 @@ CL
     0.0000    0.0000    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0  0
 M  CHG  1   1  -1
 M  END
+>  <LigandName>  (16) 
+CL
+
+>  <Denticity>  (16) 
+1
+
+>  <DenticityDescription>  (16) 
+monodentate
+
+>  <Delta_cm-1>  (16) 
+12000
+
+>  <DeltaConfidence>  (16) 
+estimated
+
+>  <SMILES>  (16) 
+[Cl-]
+
 >  <NetFormalCharge>  (16) 
 -1
 
@@ -577,6 +829,18 @@ Cl⁻
 
 >  <FieldStrength>  (17) 
 weak
+
+>  <Delta_cm-1>  (17) 
+15000
+
+>  <DonorAtom>  (17) 
+Cl
+
+>  <Denticity>  (17) 
+1
+
+>  <DenticityDescription>  (17) 
+monodentate
 
 >  <MolecularWeight>  (17) 
 35.45
@@ -615,6 +879,18 @@ CN⁻
 >  <FieldStrength>  (18) 
 very strong
 
+>  <Delta_cm-1>  (18) 
+30000
+
+>  <DonorAtom>  (18) 
+C
+
+>  <Denticity>  (18) 
+2
+
+>  <DenticityDescription>  (18) 
+bidentate
+
 >  <MolecularWeight>  (18) 
 26.02
 
@@ -651,6 +927,18 @@ CO
 
 >  <FieldStrength>  (19) 
 very strong
+
+>  <Delta_cm-1>  (19) 
+32000
+
+>  <DonorAtom>  (19) 
+C
+
+>  <Denticity>  (19) 
+2
+
+>  <DenticityDescription>  (19) 
+bidentate
 
 >  <MolecularWeight>  (19) 
 28.01
@@ -774,6 +1062,24 @@ COA
  46 47  1  0
  47 48  1  0
 M  END
+>  <LigandName>  (20) 
+COA
+
+>  <Denticity>  (20) 
+14
+
+>  <DenticityDescription>  (20) 
+14-dentate
+
+>  <Delta_cm-1>  (20) 
+23071
+
+>  <DeltaConfidence>  (20) 
+estimated
+
+>  <SMILES>  (20) 
+[H]O[C@]1([H])[C@]([H])(OP(=O)(O[H])O[H])[C@@]([H])(C([H])([H])O[P@](=O)(O[H])O[P@@](=O)(O[H])OC([H])([H])C(C([H])([H])[H])(C([H])([H])[H])[C@@]([H])(O[H])C(=O)N([H])C([H])([H])C([H])([H])C(=O)N([H])C([H])([H])C([H])([H])S[H])O[C@@]1([H])n1c([H])nc2c(N([H])[H])nc([H])nc21
+
 >  <NetFormalCharge>  (20) 
 0
 
@@ -785,6 +1091,24 @@ CS
     0.0000    0.0000    0.0000 Cs  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   1
 M  END
+>  <LigandName>  (21) 
+CS
+
+>  <Denticity>  (21) 
+0
+
+>  <DenticityDescription>  (21) 
+non-dentate
+
+>  <Delta_cm-1>  (21) 
+20000
+
+>  <DeltaConfidence>  (21) 
+default
+
+>  <SMILES>  (21) 
+[Cs+]
+
 >  <NetFormalCharge>  (21) 
 1
 
@@ -796,6 +1120,24 @@ CU
     0.0000    0.0000    0.0000 Cu  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (22) 
+CU
+
+>  <Denticity>  (22) 
+0
+
+>  <DenticityDescription>  (22) 
+non-dentate
+
+>  <Delta_cm-1>  (22) 
+20000
+
+>  <DeltaConfidence>  (22) 
+default
+
+>  <SMILES>  (22) 
+[Cu+2]
+
 >  <NetFormalCharge>  (22) 
 2
 
@@ -822,6 +1164,18 @@ CN(C)C=O
 
 >  <FieldStrength>  (23) 
 moderate-strong
+
+>  <Delta_cm-1>  (23) 
+22000
+
+>  <DonorAtom>  (23) 
+O
+
+>  <Denticity>  (23) 
+0
+
+>  <DenticityDescription>  (23) 
+non-dentate
 
 >  <MolecularWeight>  (23) 
 73.09
@@ -854,6 +1208,24 @@ DMS
   1  3  1  0
   1  4  1  0
 M  END
+>  <LigandName>  (24) 
+DMS
+
+>  <Denticity>  (24) 
+2
+
+>  <DenticityDescription>  (24) 
+bidentate
+
+>  <Delta_cm-1>  (24) 
+18000
+
+>  <DeltaConfidence>  (24) 
+estimated
+
+>  <SMILES>  (24) 
+[H]C([H])([H])S(=O)C([H])([H])[H]
+
 >  <NetFormalCharge>  (24) 
 0
 
@@ -878,6 +1250,18 @@ CS(=O)C
 
 >  <FieldStrength>  (25) 
 moderate
+
+>  <Delta_cm-1>  (25) 
+21000
+
+>  <DonorAtom>  (25) 
+S
+
+>  <Denticity>  (25) 
+2
+
+>  <DenticityDescription>  (25) 
+bidentate
 
 >  <MolecularWeight>  (25) 
 78.14
@@ -910,6 +1294,24 @@ EDO
   1  3  1  0
   3  4  1  0
 M  END
+>  <LigandName>  (26) 
+EDO
+
+>  <Denticity>  (26) 
+2
+
+>  <DenticityDescription>  (26) 
+bidentate
+
+>  <Delta_cm-1>  (26) 
+20000
+
+>  <DeltaConfidence>  (26) 
+estimated
+
+>  <SMILES>  (26) 
+[H]OC([H])([H])C([H])([H])O[H]
+
 >  <NetFormalCharge>  (26) 
 0
 
@@ -934,6 +1336,18 @@ NCCN
 
 >  <FieldStrength>  (27) 
 moderate-strong
+
+>  <Delta_cm-1>  (27) 
+25000
+
+>  <DonorAtom>  (27) 
+N,N
+
+>  <Denticity>  (27) 
+2
+
+>  <DenticityDescription>  (27) 
+bidentate
 
 >  <MolecularWeight>  (27) 
 60.1
@@ -972,6 +1386,18 @@ CCO
 
 >  <FieldStrength>  (28) 
 moderate
+
+>  <Delta_cm-1>  (28) 
+20000
+
+>  <DonorAtom>  (28) 
+O
+
+>  <Denticity>  (28) 
+1
+
+>  <DenticityDescription>  (28) 
+monodentate
 
 >  <MolecularWeight>  (28) 
 46.07
@@ -1108,6 +1534,24 @@ FAD
  50 52  1  1
  50 53  1  0
 M  END
+>  <LigandName>  (29) 
+FAD
+
+>  <Denticity>  (29) 
+18
+
+>  <DenticityDescription>  (29) 
+18-dentate
+
+>  <Delta_cm-1>  (29) 
+22833
+
+>  <DeltaConfidence>  (29) 
+estimated
+
+>  <SMILES>  (29) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])O[P@@](=O)(O[H])O[P@](=O)(O[H])OC([H])([H])[C@@]([H])(O[H])[C@@]([H])(O[H])[C@@]([H])(O[H])C([H])([H])n1c2nc(=O)n([H])c(=O)c-2nc2c([H])c(C([H])([H])[H])c(C([H])([H])[H])c([H])c21
+
 >  <NetFormalCharge>  (29) 
 0
 
@@ -1119,6 +1563,24 @@ FE
     0.0000    0.0000    0.0000 Fe  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   3
 M  END
+>  <LigandName>  (30) 
+FE
+
+>  <Denticity>  (30) 
+0
+
+>  <DenticityDescription>  (30) 
+non-dentate
+
+>  <Delta_cm-1>  (30) 
+20000
+
+>  <DeltaConfidence>  (30) 
+default
+
+>  <SMILES>  (30) 
+[Fe+3]
+
 >  <NetFormalCharge>  (30) 
 3
 
@@ -1138,6 +1600,18 @@ F⁻
 
 >  <FieldStrength>  (31) 
 weak
+
+>  <Delta_cm-1>  (31) 
+18000
+
+>  <DonorAtom>  (31) 
+F
+
+>  <Denticity>  (31) 
+0
+
+>  <DenticityDescription>  (31) 
+non-dentate
 
 >  <MolecularWeight>  (31) 
 19.0
@@ -1227,6 +1701,24 @@ FMN
  28 30  1  0
  28 31  1  0
 M  END
+>  <LigandName>  (32) 
+FMN
+
+>  <Denticity>  (32) 
+10
+
+>  <DenticityDescription>  (32) 
+10-dentate
+
+>  <Delta_cm-1>  (32) 
+22400
+
+>  <DeltaConfidence>  (32) 
+estimated
+
+>  <SMILES>  (32) 
+[H]O[C@@]([H])([C@@]([H])(O[H])C([H])([H])n1c2nc(=O)n([H])c(=O)c-2nc2c([H])c(C([H])([H])[H])c(C([H])([H])[H])c([H])c21)[C@]([H])(O[H])C([H])([H])OP(=O)(O[H])O[H]
+
 >  <NetFormalCharge>  (32) 
 0
 
@@ -1250,6 +1742,18 @@ C(=O)[O-]
 
 >  <FieldStrength>  (33) 
 moderate
+
+>  <Delta_cm-1>  (33) 
+20000
+
+>  <DonorAtom>  (33) 
+O
+
+>  <Denticity>  (33) 
+3
+
+>  <DenticityDescription>  (33) 
+tridentate
 
 >  <MolecularWeight>  (33) 
 45.02
@@ -1297,6 +1801,24 @@ FUC
   5  6  1  1
   5 11  1  0
 M  END
+>  <LigandName>  (34) 
+FUC
+
+>  <Denticity>  (34) 
+4
+
+>  <DenticityDescription>  (34) 
+tetradentate
+
+>  <Delta_cm-1>  (34) 
+20000
+
+>  <DeltaConfidence>  (34) 
+estimated
+
+>  <SMILES>  (34) 
+[H]O[C@]1([H])O[C@@]([H])(C([H])([H])[H])[C@@]([H])(O[H])[C@@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (34) 
 0
 
@@ -1330,6 +1852,24 @@ GAL
   5 11  1  0
   6 12  1  0
 M  END
+>  <LigandName>  (35) 
+GAL
+
+>  <Denticity>  (35) 
+5
+
+>  <DenticityDescription>  (35) 
+pentadentate
+
+>  <Delta_cm-1>  (35) 
+20000
+
+>  <DeltaConfidence>  (35) 
+estimated
+
+>  <SMILES>  (35) 
+[H]OC([H])([H])[C@@]1([H])O[C@@]([H])(O[H])[C@]([H])(O[H])[C@@]([H])(O[H])[C@@]1([H])O[H]
+
 >  <NetFormalCharge>  (35) 
 0
 
@@ -1397,6 +1937,24 @@ GDP
  25 27  2  0
  27 28  1  0
 M  END
+>  <LigandName>  (36) 
+GDP
+
+>  <Denticity>  (36) 
+12
+
+>  <DenticityDescription>  (36) 
+12-dentate
+
+>  <Delta_cm-1>  (36) 
+22916
+
+>  <DeltaConfidence>  (36) 
+estimated
+
+>  <SMILES>  (36) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(=O)n([H])c(N([H])[H])nc32)O[C@]1([H])C([H])([H])O[P@](=O)(O[H])OP(=O)(O[H])O[H]
+
 >  <NetFormalCharge>  (36) 
 0
 
@@ -1430,6 +1988,24 @@ GLC
   5 11  1  0
   6 12  1  0
 M  END
+>  <LigandName>  (37) 
+GLC
+
+>  <Denticity>  (37) 
+5
+
+>  <DenticityDescription>  (37) 
+pentadentate
+
+>  <Delta_cm-1>  (37) 
+20000
+
+>  <DeltaConfidence>  (37) 
+estimated
+
+>  <SMILES>  (37) 
+[H]OC([H])([H])[C@@]1([H])O[C@]([H])(O[H])[C@]([H])(O[H])[C@@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (37) 
 0
 
@@ -1481,6 +2057,24 @@ GMP
  17 19  2  0
  19 20  1  0
 M  END
+>  <LigandName>  (38) 
+GMP
+
+>  <Denticity>  (38) 
+8
+
+>  <DenticityDescription>  (38) 
+8-dentate
+
+>  <Delta_cm-1>  (38) 
+22375
+
+>  <DeltaConfidence>  (38) 
+estimated
+
+>  <SMILES>  (38) 
+[H]OC([H])([H])[C@@]1([H])O[C@@]([H])(n2c([H])nc3c(=O)n([H])c(N([H])[H])nc32)[C@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (38) 
 0
 
@@ -1556,6 +2150,24 @@ GTP
  29 31  2  0
  31 32  1  0
 M  END
+>  <LigandName>  (39) 
+GTP
+
+>  <Denticity>  (39) 
+14
+
+>  <DenticityDescription>  (39) 
+14-dentate
+
+>  <Delta_cm-1>  (39) 
+23071
+
+>  <DeltaConfidence>  (39) 
+estimated
+
+>  <SMILES>  (39) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(=O)n([H])c(N([H])[H])nc32)O[C@]1([H])C([H])([H])O[P@](=O)(O[H])O[P@](=O)(O[H])OP(=O)(O[H])O[H]
+
 >  <NetFormalCharge>  (39) 
 0
 
@@ -1574,6 +2186,18 @@ O
 
 >  <FieldStrength>  (40) 
 moderate
+
+>  <Delta_cm-1>  (40) 
+20000
+
+>  <DonorAtom>  (40) 
+O
+
+>  <Denticity>  (40) 
+0
+
+>  <DenticityDescription>  (40) 
+non-dentate
 
 >  <MolecularWeight>  (40) 
 18.02
@@ -1699,6 +2323,24 @@ M  V30 50 9 42 43
 M  V30 END BOND
 M  V30 END CTAB
 M  END
+>  <LigandName>  (41) 
+HEM
+
+>  <Denticity>  (41) 
+4
+
+>  <DenticityDescription>  (41) 
+tetradentate
+
+>  <Delta_cm-1>  (41) 
+22000
+
+>  <DeltaConfidence>  (41) 
+estimated
+
+>  <SMILES>  (41) 
+[H]OC(=O)C([H])([H])C([H])([H])C1=C(C([H])([H])[H])C2=[N]3->[Fe@SP3]45<-[N]6=C(C(C([H])=C([H])[H])=C(C([H])([H])[H])/C6=C(\[H])c6c(C([H])([H])[H])c(C([H])([H])C([H])([H])C(=O)O[H])c([n]64)/C([H])=C/13)/C([H])=c1/c(C([H])([H])[H])c(C([H])=C([H])[H])/c([n]15)=C/2[H]
+
 >  <NetFormalCharge>  (41) 
 0
 
@@ -1723,6 +2365,24 @@ HEZ
   6  7  1  0
   7  8  1  0
 M  END
+>  <LigandName>  (42) 
+HEZ
+
+>  <Denticity>  (42) 
+2
+
+>  <DenticityDescription>  (42) 
+bidentate
+
+>  <Delta_cm-1>  (42) 
+20000
+
+>  <DeltaConfidence>  (42) 
+estimated
+
+>  <SMILES>  (42) 
+[H]OC([H])([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])C([H])([H])O[H]
+
 >  <NetFormalCharge>  (42) 
 0
 
@@ -1742,6 +2402,18 @@ H⁻
 
 >  <FieldStrength>  (43) 
 very strong
+
+>  <Delta_cm-1>  (43) 
+31000
+
+>  <DonorAtom>  (43) 
+H
+
+>  <Denticity>  (43) 
+0
+
+>  <DenticityDescription>  (43) 
+non-dentate
 
 >  <MolecularWeight>  (43) 
 1.01
@@ -1806,6 +2478,18 @@ c1cnc[nH]1
 >  <FieldStrength>  (45) 
 moderate-strong
 
+>  <Delta_cm-1>  (45) 
+24000
+
+>  <DonorAtom>  (45) 
+N
+
+>  <Denticity>  (45) 
+2
+
+>  <DenticityDescription>  (45) 
+bidentate
+
 >  <MolecularWeight>  (45) 
 68.08
 
@@ -1841,6 +2525,18 @@ I⁻
 >  <FieldStrength>  (46) 
 very weak
 
+>  <Delta_cm-1>  (46) 
+10000
+
+>  <DonorAtom>  (46) 
+I
+
+>  <Denticity>  (46) 
+1
+
+>  <DenticityDescription>  (46) 
+monodentate
+
 >  <MolecularWeight>  (46) 
 126.9
 
@@ -1867,6 +2563,24 @@ IOD
     0.0000    0.0000    0.0000 I   0  0  0  0  0  0  0  0  0  0  0  0
 M  CHG  1   1  -1
 M  END
+>  <LigandName>  (47) 
+IOD
+
+>  <Denticity>  (47) 
+1
+
+>  <DenticityDescription>  (47) 
+monodentate
+
+>  <Delta_cm-1>  (47) 
+12000
+
+>  <DeltaConfidence>  (47) 
+estimated
+
+>  <SMILES>  (47) 
+[I-]
+
 >  <NetFormalCharge>  (47) 
 -1
 
@@ -1878,6 +2592,24 @@ K
     0.0000    0.0000    0.0000 K   0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   1
 M  END
+>  <LigandName>  (48) 
+K
+
+>  <Denticity>  (48) 
+0
+
+>  <DenticityDescription>  (48) 
+non-dentate
+
+>  <Delta_cm-1>  (48) 
+20000
+
+>  <DeltaConfidence>  (48) 
+default
+
+>  <SMILES>  (48) 
+[K+]
+
 >  <NetFormalCharge>  (48) 
 1
 
@@ -1911,6 +2643,24 @@ MAN
   5 11  1  0
   6 12  1  0
 M  END
+>  <LigandName>  (49) 
+MAN
+
+>  <Denticity>  (49) 
+5
+
+>  <DenticityDescription>  (49) 
+pentadentate
+
+>  <Delta_cm-1>  (49) 
+20000
+
+>  <DeltaConfidence>  (49) 
+estimated
+
+>  <SMILES>  (49) 
+[H]OC([H])([H])[C@@]1([H])O[C@]([H])(O[H])[C@@]([H])(O[H])[C@@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (49) 
 0
 
@@ -1933,6 +2683,18 @@ CC#N
 
 >  <FieldStrength>  (50) 
 moderate-strong
+
+>  <Delta_cm-1>  (50) 
+24000
+
+>  <DonorAtom>  (50) 
+N
+
+>  <Denticity>  (50) 
+2
+
+>  <DenticityDescription>  (50) 
+bidentate
 
 >  <MolecularWeight>  (50) 
 41.05
@@ -1969,6 +2731,18 @@ CO
 
 >  <FieldStrength>  (51) 
 moderate
+
+>  <Delta_cm-1>  (51) 
+20000
+
+>  <DonorAtom>  (51) 
+O
+
+>  <Denticity>  (51) 
+1
+
+>  <DenticityDescription>  (51) 
+monodentate
 
 >  <MolecularWeight>  (51) 
 32.04
@@ -2019,6 +2793,24 @@ MES
   9 12  1  0
 M  CHG  2   4   1  12  -1
 M  END
+>  <LigandName>  (52) 
+MES
+
+>  <Denticity>  (52) 
+4
+
+>  <DenticityDescription>  (52) 
+tetradentate
+
+>  <Delta_cm-1>  (52) 
+18666
+
+>  <DeltaConfidence>  (52) 
+estimated
+
+>  <SMILES>  (52) 
+[H]C1([H])OC([H])([H])C([H])([H])[N+]([H])(C([H])([H])C([H])([H])S(=O)(=O)[O-])C1([H])[H]
+
 >  <NetFormalCharge>  (52) 
 0
 
@@ -2030,6 +2822,24 @@ MG
     0.0000    0.0000    0.0000 Mg  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (53) 
+MG
+
+>  <Denticity>  (53) 
+0
+
+>  <DenticityDescription>  (53) 
+non-dentate
+
+>  <Delta_cm-1>  (53) 
+20000
+
+>  <DeltaConfidence>  (53) 
+default
+
+>  <SMILES>  (53) 
+[Mg+2]
+
 >  <NetFormalCharge>  (53) 
 2
 
@@ -3358,6 +4168,24 @@ MN
     0.0000    0.0000    0.0000 Mn  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (78) 
+MN
+
+>  <Denticity>  (78) 
+0
+
+>  <DenticityDescription>  (78) 
+non-dentate
+
+>  <Delta_cm-1>  (78) 
+20000
+
+>  <DeltaConfidence>  (78) 
+default
+
+>  <SMILES>  (78) 
+[Mn+2]
+
 >  <NetFormalCharge>  (78) 
 2
 
@@ -3382,6 +4210,24 @@ MPD
   6  7  1  0
   6  8  1  1
 M  END
+>  <LigandName>  (79) 
+MPD
+
+>  <Denticity>  (79) 
+2
+
+>  <DenticityDescription>  (79) 
+bidentate
+
+>  <Delta_cm-1>  (79) 
+20000
+
+>  <DeltaConfidence>  (79) 
+estimated
+
+>  <SMILES>  (79) 
+[H]OC(C([H])([H])[H])(C([H])([H])[H])C([H])([H])[C@@]([H])(O[H])C([H])([H])[H]
+
 >  <NetFormalCharge>  (79) 
 0
 
@@ -3393,6 +4239,24 @@ NA
     0.0000    0.0000    0.0000 Na  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   1
 M  END
+>  <LigandName>  (80) 
+NA
+
+>  <Denticity>  (80) 
+0
+
+>  <DenticityDescription>  (80) 
+non-dentate
+
+>  <Delta_cm-1>  (80) 
+20000
+
+>  <DeltaConfidence>  (80) 
+default
+
+>  <SMILES>  (80) 
+[Na+]
+
 >  <NetFormalCharge>  (80) 
 1
 
@@ -3495,6 +4359,24 @@ NAD
  43 44  2  0
 M  CHG  2  26  -1  36   1
 M  END
+>  <LigandName>  (81) 
+NAD
+
+>  <Denticity>  (81) 
+14
+
+>  <DenticityDescription>  (81) 
+14-dentate
+
+>  <Delta_cm-1>  (81) 
+22785
+
+>  <DeltaConfidence>  (81) 
+estimated
+
+>  <SMILES>  (81) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])O[P@](=O)(O[H])O[P@](=O)([O-])OC([H])([H])[C@@]1([H])O[C@@]([H])([n+]2c([H])c([H])c([H])c(C(=O)N([H])[H])c2[H])[C@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (81) 
 0
 
@@ -3534,6 +4416,24 @@ NAG
   7  9  1  0
   7 15  2  0
 M  END
+>  <LigandName>  (82) 
+NAG
+
+>  <Denticity>  (82) 
+4
+
+>  <DenticityDescription>  (82) 
+tetradentate
+
+>  <Delta_cm-1>  (82) 
+20000
+
+>  <DeltaConfidence>  (82) 
+estimated
+
+>  <SMILES>  (82) 
+[H]OC([H])([H])[C@@]1([H])O[C@@]([H])(O[H])[C@]([H])(N([H])C(=O)C([H])([H])[H])[C@@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (82) 
 0
 
@@ -3595,6 +4495,18 @@ N=C=S
 >  <FieldStrength>  (84) 
 moderate
 
+>  <Delta_cm-1>  (84) 
+20000
+
+>  <DonorAtom>  (84) 
+N
+
+>  <Denticity>  (84) 
+0
+
+>  <DenticityDescription>  (84) 
+non-dentate
+
 >  <MolecularWeight>  (84) 
 59.09
 
@@ -3629,6 +4541,18 @@ N
 >  <FieldStrength>  (85) 
 moderate-strong
 
+>  <Delta_cm-1>  (85) 
+23000
+
+>  <DonorAtom>  (85) 
+N
+
+>  <Denticity>  (85) 
+0
+
+>  <DenticityDescription>  (85) 
+non-dentate
+
 >  <MolecularWeight>  (85) 
 17.03
 
@@ -3655,6 +4579,24 @@ NH4
     0.0000    0.0000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
 M  CHG  1   1   1
 M  END
+>  <LigandName>  (86) 
+NH4
+
+>  <Denticity>  (86) 
+0
+
+>  <DenticityDescription>  (86) 
+non-dentate
+
+>  <Delta_cm-1>  (86) 
+20000
+
+>  <DeltaConfidence>  (86) 
+default
+
+>  <SMILES>  (86) 
+[H][N+]([H])([H])[H]
+
 >  <NetFormalCharge>  (86) 
 1
 
@@ -3679,6 +4621,18 @@ NO₂⁻
 
 >  <FieldStrength>  (87) 
 strong
+
+>  <Delta_cm-1>  (87) 
+27000
+
+>  <DonorAtom>  (87) 
+N
+
+>  <Denticity>  (87) 
+1
+
+>  <DenticityDescription>  (87) 
+monodentate
 
 >  <MolecularWeight>  (87) 
 46.01
@@ -3712,6 +4666,24 @@ NO3
   1  4  1  0
 M  CHG  3   1   1   3  -1   4  -1
 M  END
+>  <LigandName>  (88) 
+NO3
+
+>  <Denticity>  (88) 
+2
+
+>  <DenticityDescription>  (88) 
+bidentate
+
+>  <Delta_cm-1>  (88) 
+20000
+
+>  <DeltaConfidence>  (88) 
+estimated
+
+>  <SMILES>  (88) 
+O=[N+]([O-])[O-]
+
 >  <NetFormalCharge>  (88) 
 -1
 
@@ -3737,6 +4709,18 @@ O=N(=O)[O-]
 
 >  <FieldStrength>  (89) 
 weak
+
+>  <Delta_cm-1>  (89) 
+15000
+
+>  <DonorAtom>  (89) 
+O
+
+>  <Denticity>  (89) 
+2
+
+>  <DenticityDescription>  (89) 
+bidentate
 
 >  <MolecularWeight>  (89) 
 62.0
@@ -3773,6 +4757,18 @@ OH⁻
 >  <FieldStrength>  (90) 
 moderate
 
+>  <Delta_cm-1>  (90) 
+19000
+
+>  <DonorAtom>  (90) 
+O
+
+>  <Denticity>  (90) 
+1
+
+>  <DenticityDescription>  (90) 
+monodentate
+
 >  <MolecularWeight>  (90) 
 17.01
 
@@ -3799,6 +4795,24 @@ PB
     0.0000    0.0000    0.0000 Pb  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (91) 
+PB
+
+>  <Denticity>  (91) 
+0
+
+>  <DenticityDescription>  (91) 
+non-dentate
+
+>  <Delta_cm-1>  (91) 
+20000
+
+>  <DeltaConfidence>  (91) 
+default
+
+>  <SMILES>  (91) 
+[Pb+2]
+
 >  <NetFormalCharge>  (91) 
 2
 
@@ -3821,6 +4835,24 @@ PEG
   5  6  1  0
   6  7  1  0
 M  END
+>  <LigandName>  (92) 
+PEG
+
+>  <Denticity>  (92) 
+2
+
+>  <DenticityDescription>  (92) 
+bidentate
+
+>  <Delta_cm-1>  (92) 
+20000
+
+>  <DeltaConfidence>  (92) 
+estimated
+
+>  <SMILES>  (92) 
+[H]OC([H])([H])C([H])([H])OC([H])([H])C([H])([H])O[H]
+
 >  <NetFormalCharge>  (92) 
 0
 
@@ -3849,6 +4881,24 @@ PGE
   8  9  1  0
   9 10  1  0
 M  END
+>  <LigandName>  (93) 
+PGE
+
+>  <Denticity>  (93) 
+2
+
+>  <DenticityDescription>  (93) 
+bidentate
+
+>  <Delta_cm-1>  (93) 
+20000
+
+>  <DeltaConfidence>  (93) 
+estimated
+
+>  <SMILES>  (93) 
+[H]OC([H])([H])C([H])([H])OC([H])([H])C([H])([H])OC([H])([H])C([H])([H])O[H]
+
 >  <NetFormalCharge>  (93) 
 0
 
@@ -3901,6 +4951,18 @@ c1ccc2c(c1)ccnc2c3cccnc3
 >  <FieldStrength>  (94) 
 strong
 
+>  <Delta_cm-1>  (94) 
+27000
+
+>  <DonorAtom>  (94) 
+N,N
+
+>  <Denticity>  (94) 
+2
+
+>  <DenticityDescription>  (94) 
+bidentate
+
 >  <MolecularWeight>  (94) 
 206.25
 
@@ -3935,6 +4997,24 @@ PO4
   1  5  1  0
 M  CHG  3   3  -1   4  -1   5  -1
 M  END
+>  <LigandName>  (95) 
+PO4
+
+>  <Denticity>  (95) 
+4
+
+>  <DenticityDescription>  (95) 
+tetradentate
+
+>  <Delta_cm-1>  (95) 
+22000
+
+>  <DeltaConfidence>  (95) 
+estimated
+
+>  <SMILES>  (95) 
+O=P([O-])([O-])[O-]
+
 >  <NetFormalCharge>  (95) 
 -3
 
@@ -3993,6 +5073,18 @@ P(c1ccccc1)(c2ccccc2)(c3ccccc3)
 >  <FieldStrength>  (96) 
 strong
 
+>  <Delta_cm-1>  (96) 
+28000
+
+>  <DonorAtom>  (96) 
+P
+
+>  <Denticity>  (96) 
+1
+
+>  <DenticityDescription>  (96) 
+monodentate
+
 >  <MolecularWeight>  (96) 
 262.29
 
@@ -4038,6 +5130,18 @@ c1ccncc1
 >  <FieldStrength>  (97) 
 moderate
 
+>  <Delta_cm-1>  (97) 
+22000
+
+>  <DonorAtom>  (97) 
+N
+
+>  <Denticity>  (97) 
+1
+
+>  <DenticityDescription>  (97) 
+monodentate
+
 >  <MolecularWeight>  (97) 
 79.1
 
@@ -4081,6 +5185,18 @@ C1CCNC1
 >  <FieldStrength>  (98) 
 strong
 
+>  <Delta_cm-1>  (98) 
+25000
+
+>  <DonorAtom>  (98) 
+N
+
+>  <Denticity>  (98) 
+1
+
+>  <DenticityDescription>  (98) 
+monodentate
+
 >  <MolecularWeight>  (98) 
 71.12
 
@@ -4115,6 +5231,18 @@ S²⁻
 
 >  <FieldStrength>  (99) 
 very weak
+
+>  <Delta_cm-1>  (99) 
+11000
+
+>  <DonorAtom>  (99) 
+S
+
+>  <Denticity>  (99) 
+0
+
+>  <DenticityDescription>  (99) 
+non-dentate
 
 >  <MolecularWeight>  (99) 
 32.07
@@ -4194,6 +5322,24 @@ SAH
  24 25  1  0
  25 26  2  0
 M  END
+>  <LigandName>  (100) 
+SAH
+
+>  <Denticity>  (100) 
+9
+
+>  <DenticityDescription>  (100) 
+9-dentate
+
+>  <Delta_cm-1>  (100) 
+22444
+
+>  <DeltaConfidence>  (100) 
+estimated
+
+>  <SMILES>  (100) 
+[H]OC(=O)[C@@]([H])(N([H])[H])C([H])([H])C([H])([H])SC([H])([H])[C@@]1([H])O[C@@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)[C@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (100) 
 0
 
@@ -4260,6 +5406,24 @@ SAM
  26 27  2  0
 M  CHG  2   5  -1   8   1
 M  END
+>  <LigandName>  (101) 
+SAM
+
+>  <Denticity>  (101) 
+11
+
+>  <DenticityDescription>  (101) 
+11-dentate
+
+>  <Delta_cm-1>  (101) 
+22200
+
+>  <DeltaConfidence>  (101) 
+estimated
+
+>  <SMILES>  (101) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])[S@@+](C([H])([H])[H])C([H])([H])C([H])([H])[C@@]([H])(C(=O)[O-])N([H])[H]
+
 >  <NetFormalCharge>  (101) 
 0
 
@@ -4320,6 +5484,18 @@ S=C=N
 
 >  <FieldStrength>  (103) 
 weak
+
+>  <Delta_cm-1>  (103) 
+14000
+
+>  <DonorAtom>  (103) 
+S
+
+>  <Denticity>  (103) 
+0
+
+>  <DenticityDescription>  (103) 
+non-dentate
 
 >  <MolecularWeight>  (103) 
 59.09
@@ -4387,6 +5563,24 @@ SIA
  10 12  1  0
  10 21  2  0
 M  END
+>  <LigandName>  (104) 
+SIA
+
+>  <Denticity>  (104) 
+6
+
+>  <DenticityDescription>  (104) 
+hexadentate
+
+>  <Delta_cm-1>  (104) 
+20000
+
+>  <DeltaConfidence>  (104) 
+estimated
+
+>  <SMILES>  (104) 
+[H]OC(=O)[C@]1(O[H])O[C@@]([H])([C@]([H])(O[H])[C@]([H])(O[H])C([H])([H])O[H])[C@]([H])(N([H])C(=O)C([H])([H])[H])[C@@]([H])(O[H])C1([H])[H]
+
 >  <NetFormalCharge>  (104) 
 0
 
@@ -4406,6 +5600,24 @@ SO4
   1  5  1  0
 M  CHG  2   4  -1   5  -1
 M  END
+>  <LigandName>  (105) 
+SO4
+
+>  <Denticity>  (105) 
+5
+
+>  <DenticityDescription>  (105) 
+pentadentate
+
+>  <Delta_cm-1>  (105) 
+19000
+
+>  <DeltaConfidence>  (105) 
+estimated
+
+>  <SMILES>  (105) 
+O=S(=O)([O-])[O-]
+
 >  <NetFormalCharge>  (105) 
 -2
 
@@ -4417,6 +5629,24 @@ SR
     0.0000    0.0000    0.0000 Sr  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (106) 
+SR
+
+>  <Denticity>  (106) 
+0
+
+>  <DenticityDescription>  (106) 
+non-dentate
+
+>  <Delta_cm-1>  (106) 
+20000
+
+>  <DeltaConfidence>  (106) 
+default
+
+>  <SMILES>  (106) 
+[Sr+2]
+
 >  <NetFormalCharge>  (106) 
 2
 
@@ -4444,6 +5674,18 @@ C1CCOC1
 
 >  <FieldStrength>  (107) 
 moderate
+
+>  <Delta_cm-1>  (107) 
+21000
+
+>  <DonorAtom>  (107) 
+O
+
+>  <Denticity>  (107) 
+0
+
+>  <DenticityDescription>  (107) 
+non-dentate
 
 >  <MolecularWeight>  (107) 
 72.11
@@ -4485,6 +5727,24 @@ TRS
   4  8  1  0
 M  CHG  1   5   1
 M  END
+>  <LigandName>  (108) 
+TRS
+
+>  <Denticity>  (108) 
+3
+
+>  <DenticityDescription>  (108) 
+tridentate
+
+>  <Delta_cm-1>  (108) 
+20000
+
+>  <DeltaConfidence>  (108) 
+estimated
+
+>  <SMILES>  (108) 
+[H]OC([H])([H])C(C([H])([H])O[H])(C([H])([H])O[H])[N+]([H])([H])[H]
+
 >  <NetFormalCharge>  (108) 
 1
 
@@ -4496,6 +5756,24 @@ ZN
     0.0000    0.0000    0.0000 Zn  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (109) 
+ZN
+
+>  <Denticity>  (109) 
+0
+
+>  <DenticityDescription>  (109) 
+non-dentate
+
+>  <Delta_cm-1>  (109) 
+20000
+
+>  <DeltaConfidence>  (109) 
+default
+
+>  <SMILES>  (109) 
+[Zn+2]
+
 >  <NetFormalCharge>  (109) 
 2
 

@@ -16,6 +16,24 @@ ACE
   3  6  1  0
   3  7  1  0
 M  END
+>  <LigandName>  (1) 
+ACE
+
+>  <Denticity>  (1) 
+0
+
+>  <DenticityDescription>  (1) 
+non-dentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+default
+
+>  <SMILES>  (1) 
+[H]C(=O)C([H])([H])[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

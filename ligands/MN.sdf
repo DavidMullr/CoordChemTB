@@ -5,6 +5,24 @@ MN
     0.0000    0.0000    0.0000 Mn  0  0  0  0  0 15  0  0  0  0  0  0
 M  CHG  1   1   2
 M  END
+>  <LigandName>  (1) 
+MN
+
+>  <Denticity>  (1) 
+0
+
+>  <DenticityDescription>  (1) 
+non-dentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+default
+
+>  <SMILES>  (1) 
+[Mn+2]
+
 >  <NetFormalCharge>  (1) 
 2
 

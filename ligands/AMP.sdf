@@ -79,6 +79,24 @@ AMP
  21 37  1  0
  22 23  2  0
 M  END
+>  <LigandName>  (1) 
+AMP
+
+>  <Denticity>  (1) 
+10
+
+>  <DenticityDescription>  (1) 
+10-dentate
+
+>  <Delta_cm-1>  (1) 
+22700
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])OP(=O)(O[H])O[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

@@ -49,6 +49,24 @@ FUC
   9 22  1  0
  10 23  1  0
 M  END
+>  <LigandName>  (1) 
+FUC
+
+>  <Denticity>  (1) 
+4
+
+>  <DenticityDescription>  (1) 
+tetradentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]O[C@]1([H])O[C@@]([H])(C([H])([H])[H])[C@@]([H])(O[H])[C@@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

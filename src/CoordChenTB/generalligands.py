@@ -1,9 +1,59 @@
-# LIGAND SDF FILES DOWNLOADER FOR RCSB.ORG
+# LIGAND SDF FILES DOWNLOADER FROM RCSB & METADATA ENRICHER FOR RCSB.ORG
 
-import requests
 import os
+import requests
+from rdkit import Chem
+from rdkit.Chem import AllChem, Descriptors
 
-# Allowing user to append new ligands by typing their 3-letter RCSB codes
+# Describe denticity in words
+def describe_denticity(n):
+    names = {
+        0: "non-dentate",
+        1: "monodentate",
+        2: "bidentate",
+        3: "tridentate",
+        4: "tetradentate",
+        5: "pentadentate",
+        6: "hexadentate",
+    }
+    return names.get(n, f"{n}-dentate")
+
+# Estimate denticity and Delta based on donor atoms
+def estimate_denticity_and_delta(mol):
+    smarts_rules = [
+        ("[NX3;H2,H1;!$(NC=O)]", 23000),
+        ("n", 24000),
+        ("[O-]", 20000),
+        ("C(=O)[O-]", 20000),
+        ("[OH]", 20000),
+        ("C#N", 30000),
+        ("[S-]", 16000),
+        ("S(=O)", 18000),
+        ("[P]", 28000),
+        ("[Cl,Br,I]", 12000),
+        ("[C-]#[O+]", 32000),
+    ]
+
+    donor_atoms = set()
+    matched_deltas = []
+
+    for smarts, delta in smarts_rules:
+        pattern = Chem.MolFromSmarts(smarts)
+        matches = mol.GetSubstructMatches(pattern)
+        for match in matches:
+            donor_atoms.update(match)
+            matched_deltas.append(delta)
+
+    denticity = len(donor_atoms)
+    dent_desc = describe_denticity(denticity)
+
+    if denticity > 0:
+        avg_delta = int(sum(matched_deltas) / len(matched_deltas))
+        return denticity, dent_desc, avg_delta, "estimated"
+    else:
+        return 0, "non-dentate", 20000, "default"
+
+# Ligand input
 default_ligand_ids = [
     'ATP', 'ADP', 'AMP', 'GTP', 'GDP', 'GMP', 'NAD', 'FAD', 'FMN', 'HEM',
     'COA', 'SAM', 'SAH', 'NAG', 'MAN', 'GLC', 'GAL', 'FUC', 'SIA', 'BMA',
@@ -26,71 +76,139 @@ while True:
     else:
         print("❌ Invalid code. Must be a 3-letter alphabetic code.")
 
-# Directory to save downloaded ligand files
+# Download & enrich RCSB ligands
 output_dir = "ligands"
 os.makedirs(output_dir, exist_ok=True)
 
-def download_ligand_sdf(lig_id):
+for lig_id in default_ligand_ids:
     url = f"https://files.rcsb.org/ligands/view/{lig_id}_ideal.sdf"
     response = requests.get(url)
-    if response.status_code == 200:
-        filename = os.path.join(output_dir, f"{lig_id}.sdf")
-        with open(filename, "wb") as f:
-            f.write(response.content)
-        print(f"✅ Downloaded: {lig_id}")
-    else:
+    if response.status_code != 200:
         print(f"❌ Failed to download: {lig_id}")
+        continue
 
-# Downloading each ligand
-for lig_id in default_ligand_ids:
-    download_ligand_sdf(lig_id)
+    file_path = os.path.join(output_dir, f"{lig_id}.sdf")
+    with open(file_path, "wb") as f:
+        f.write(response.content)
+    print(f"✅ Downloaded: {lig_id}")
+
+    suppl = Chem.SDMolSupplier(file_path, removeHs=False)
+    mol = suppl[0] if suppl and len(suppl) > 0 else None
+    if mol is None:
+        print(f"⚠️ Skipped unreadable file: {lig_id}")
+        continue
+
+    # Enrich molecule
+    denticity, denticity_desc, delta, delta_confidence = estimate_denticity_and_delta(mol)
+
+    mol.SetProp("LigandName", lig_id)
+    mol.SetProp("Denticity", str(denticity))
+    mol.SetProp("DenticityDescription", denticity_desc)
+    mol.SetProp("Delta_cm-1", str(delta))
+    mol.SetProp("DeltaConfidence", delta_confidence)
+
+    try:
+        smiles = Chem.MolToSmiles(mol)
+        mol.SetProp("SMILES", smiles)
+        print(f"🔬 SMILES: {smiles}")
+    except Exception as e:
+        print(f"⚠️ Failed to generate SMILES for {lig_id}: {e}")
+
+    writer = Chem.SDWriter(file_path)
+    writer.write(mol)
+    writer.close()
+    print(f"🧪 Enriched: {lig_id} | Denticity = {denticity_desc}, Δ = {delta} cm⁻¹ ({delta_confidence})")
+
 
 #CREATING SDF FILES FOR SPECHTROCHEMICAL SERIES LIGANDS THAT ARE NOT ON RCSB (with their spechtrochemical series info)  
 
+import os
 import re
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 from rdkit.Geometry import Point3D
 
-# Ligands: name -> (SMILES, field strength)
+# Output directory
+output_dir = "ligands"
+os.makedirs(output_dir, exist_ok=True)
+
+# Describe denticity
+def describe_denticity(n):
+    names = {
+        0: "non-dentate",
+        1: "monodentate",
+        2: "bidentate",
+        3: "tridentate",
+        4: "tetradentate",
+        5: "pentadentate",
+        6: "hexadentate",
+    }
+    return names.get(n, f"{n}-dentate")
+
+# Estimate denticity based on known donor SMARTS patterns
+def estimate_denticity(mol):
+    smarts_rules = [
+        "[NX3;H2,H1;!$(NC=O)]",
+        "n",
+        "[O-]",
+        "C(=O)[O-]",
+        "[OH]",
+        "C#N",
+        "[S-]",
+        "S(=O)",
+        "[P]",
+        "[Cl,Br,I]",
+        "[C-]#[O+]"
+    ]
+
+    donor_atoms = set()
+    for smarts in smarts_rules:
+        pattern = Chem.MolFromSmarts(smarts)
+        matches = mol.GetSubstructMatches(pattern)
+        for match in matches:
+            donor_atoms.update(match)
+
+    denticity = len(donor_atoms)
+    return denticity, describe_denticity(denticity)
+
+# Ligands: name -> (SMILES, field_strength, Delta_cm-1, donor_atom)
 ligands = {
-    "I⁻": ("[I-]", "very weak"),
-    "Br⁻": ("[Br-]", "very weak"),
-    "S²⁻": ("[S-2]", "very weak"),
-    "SCN⁻ (S-bound)": ("S=C=N", "weak"),
-    "Cl⁻": ("[Cl-]", "weak"),
-    "NO₃⁻": ("O=N(=O)[O-]", "weak"),
-    "F⁻": ("[F-]", "weak"),
-    "OH⁻": ("[OH-]", "moderate"),
-    "H₂O": ("O", "moderate"),
-    "C₂O₄²⁻": ("O=C([O-])C(=O)[O-]", "moderate"),
-    "NCS⁻ (N-bound)": ("N=C=S", "moderate"),
-    "py": ("c1ccncc1", "moderate"),
-    "NH₃": ("N", "moderate-strong"),
-    "en": ("NCCN", "moderate-strong"),
-    "MeCN": ("CC#N", "moderate-strong"),
-    "DMF": ("CN(C)C=O", "moderate-strong"),
-    "DMSO": ("CS(=O)C", "moderate"),
-    "bipy": ("c1ccnc(c1)c2ccccn2", "strong"),
-    "phen": ("c1ccc2c(c1)ccnc2c3cccnc3", "strong"),
-    "NO₂⁻": ("[O-][N+](=O)", "strong"),
-    "PPh₃": ("P(c1ccccc1)(c2ccccc2)(c3ccccc3)", "strong"),
-    "CN⁻": ("[C-]#N", "very strong"),
-    "CO": ("[C-]#[O+]", "very strong"),
-    "H⁻": ("[H-]", "very strong"),
-    "CH₃⁻": ("[CH3-]", "very strong"),
-    "THF": ("C1CCOC1", "moderate"),
-    "EtOH": ("CCO", "moderate"),
-    "MeOH": ("CO", "moderate"),
-    "Acetate": ("CC(=O)[O-]", "moderate"),
-    "Formate": ("C(=O)[O-]", "moderate"),
-    "Pyrrolidine": ("C1CCNC1", "strong"),
-    "Aniline": ("c1ccccc1N", "moderate"),
-    "Imidazole": ("c1cnc[nH]1", "moderate-strong")
+    "I⁻": ("[I-]", "very weak", 10000, "I"),
+    "Br⁻": ("[Br-]", "very weak", 12000, "Br"),
+    "S²⁻": ("[S-2]", "very weak", 11000, "S"),
+    "SCN⁻ (S-bound)": ("S=C=N", "weak", 14000, "S"),
+    "Cl⁻": ("[Cl-]", "weak", 15000, "Cl"),
+    "NO₃⁻": ("O=N(=O)[O-]", "weak", 15000, "O"),
+    "F⁻": ("[F-]", "weak", 18000, "F"),
+    "OH⁻": ("[OH-]", "moderate", 19000, "O"),
+    "H₂O": ("O", "moderate", 20000, "O"),
+    "C₂O₄²⁻": ("O=C([O-])C(=O)[O-]", "moderate", 20000, "O,O"),
+    "NCS⁻ (N-bound)": ("N=C=S", "moderate", 20000, "N"),
+    "py": ("c1ccncc1", "moderate", 22000, "N"),
+    "NH₃": ("N", "moderate-strong", 23000, "N"),
+    "en": ("NCCN", "moderate-strong", 25000, "N,N"),
+    "MeCN": ("CC#N", "moderate-strong", 24000, "N"),
+    "DMF": ("CN(C)C=O", "moderate-strong", 22000, "O"),
+    "DMSO": ("CS(=O)C", "moderate", 21000, "S"),
+    "bipy": ("c1ccnc(c1)c2ccccn2", "strong", 26000, "N,N"),
+    "phen": ("c1ccc2c(c1)ccnc2c3cccnc3", "strong", 27000, "N,N"),
+    "NO₂⁻": ("[O-][N+](=O)", "strong", 27000, "N"),
+    "PPh₃": ("P(c1ccccc1)(c2ccccc2)(c3ccccc3)", "strong", 28000, "P"),
+    "CN⁻": ("[C-]#N", "very strong", 30000, "C"),
+    "CO": ("[C-]#[O+]", "very strong", 32000, "C"),
+    "H⁻": ("[H-]", "very strong", 31000, "H"),
+    "CH₃⁻": ("[CH3-]", "very strong", 31000, "C"),
+    "THF": ("C1CCOC1", "moderate", 21000, "O"),
+    "EtOH": ("CCO", "moderate", 20000, "O"),
+    "MeOH": ("CO", "moderate", 20000, "O"),
+    "Acetate": ("CC(=O)[O-]", "moderate", 20000, "O,O"),
+    "Formate": ("C(=O)[O-]", "moderate", 20000, "O"),
+    "Pyrrolidine": ("C1CCNC1", "strong", 25000, "N"),
+    "Aniline": ("c1ccccc1N", "moderate", 21000, "N"),
+    "Imidazole": ("c1cnc[nH]1", "moderate-strong", 24000, "N")
 }
 
-# Function to clean names to avoid later errors
-
+# Clean names for filenames
 def clean_filename(name):
     replacements = {
         "⁻": "minus", "⁺": "plus",
@@ -100,54 +218,53 @@ def clean_filename(name):
     }
     for uni, ascii_equiv in replacements.items():
         name = name.replace(uni, ascii_equiv)
-    name = re.sub(r"[^\w\-]", "_", name)
-    return name
+    return re.sub(r"[^\w\-]", "_", name)
 
-# Generating and writing the SDF files
-
-for name, (smiles, field_strength) in ligands.items():
+# Generate and write SDF files
+for name, (smiles, field_strength, delta_cm1, donor_atom) in ligands.items():
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         print(f"❌ Could not parse: {name}")
         continue
 
-  # Adding hydrogens and generating 3D geometry
-
-    # Adding hydrogens and generating 3D geometry
     mol = Chem.AddHs(mol)
 
     if mol.GetNumAtoms() == 1:
-        # Monoatomic ligand — manually assign a position
         conf = Chem.Conformer(1)
-        conf.SetAtomPosition(0, Point3D(4.0, 0.0, 0.0))  # place away from origin
+        conf.SetAtomPosition(0, Point3D(4.0, 0.0, 0.0))
         mol.RemoveAllConformers()
         mol.AddConformer(conf)
         print(f"📍 Manually positioned monoatomic ligand: {name}")
     else:
-        # Multi-atom ligand — embed normally
         if AllChem.EmbedMolecule(mol, AllChem.ETKDG()) != 0:
             print(f"⚠️  3D embedding failed: {name}")
             continue
         AllChem.UFFOptimizeMolecule(mol)
 
+    # Estimate denticity
+    denticity, denticity_desc = estimate_denticity(mol)
 
-# Setting metadata fields
+    # Add metadata
     mol.SetProp("LigandName", name)
     mol.SetProp("SMILES", smiles)
     mol.SetProp("FieldStrength", field_strength)
+    mol.SetProp("Delta_cm-1", str(delta_cm1))
+    mol.SetProp("DonorAtom", donor_atom)
+    mol.SetProp("Denticity", str(denticity))
+    mol.SetProp("DenticityDescription", denticity_desc)
     mol.SetProp("MolecularWeight", str(round(Descriptors.MolWt(mol), 2)))
     mol.SetProp("HDonors", str(Descriptors.NumHDonors(mol)))
     mol.SetProp("HAcceptors", str(Descriptors.NumHAcceptors(mol)))
     mol.SetProp("LogP", str(round(Descriptors.MolLogP(mol), 2)))
     mol.SetProp("NumAtoms", str(mol.GetNumAtoms()))
 
-  # Saving with cleaned filename
-
-    sdf_path = os.path.join(output_dir, f"{clean_filename(name)}.sdf")
-    writer = Chem.SDWriter(sdf_path)
+    # Write to SDF
+    filename = os.path.join(output_dir, f"{clean_filename(name)}.sdf")
+    writer = Chem.SDWriter(filename)
     writer.write(mol)
     writer.close()
-    print(f"✅ SDF saved: {sdf_path}")
+    print(f"✅ SDF saved: {filename}")
+
 
 # CALCULATING LIGAND FORMAL CHARGE AND PUTING IT IN THE SDF FILE
 

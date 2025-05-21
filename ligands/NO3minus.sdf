@@ -20,6 +20,18 @@ O=N(=O)[O-]
 >  <FieldStrength>  (1) 
 weak
 
+>  <Delta_cm-1>  (1) 
+15000
+
+>  <DonorAtom>  (1) 
+O
+
+>  <Denticity>  (1) 
+2
+
+>  <DenticityDescription>  (1) 
+bidentate
+
 >  <MolecularWeight>  (1) 
 62.0
 

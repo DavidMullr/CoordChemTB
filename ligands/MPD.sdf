@@ -46,6 +46,24 @@ MPD
   8 21  1  0
   8 22  1  0
 M  END
+>  <LigandName>  (1) 
+MPD
+
+>  <Denticity>  (1) 
+2
+
+>  <DenticityDescription>  (1) 
+bidentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]OC(C([H])([H])[H])(C([H])([H])[H])C([H])([H])[C@@]([H])(O[H])C([H])([H])[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

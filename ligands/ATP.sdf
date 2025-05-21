@@ -99,6 +99,24 @@ ATP
  29 47  1  0
  30 31  2  0
 M  END
+>  <LigandName>  (1) 
+ATP
+
+>  <Denticity>  (1) 
+14
+
+>  <DenticityDescription>  (1) 
+14-dentate
+
+>  <Delta_cm-1>  (1) 
+23071
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])O[P@@](=O)(O[H])O[P@](=O)(O[H])OP(=O)(O[H])O[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

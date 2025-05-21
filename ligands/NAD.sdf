@@ -150,6 +150,24 @@ NAD
  44 71  1  0
 M  CHG  2  26  -1  36   1
 M  END
+>  <LigandName>  (1) 
+NAD
+
+>  <Denticity>  (1) 
+14
+
+>  <DenticityDescription>  (1) 
+14-dentate
+
+>  <Delta_cm-1>  (1) 
+22785
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])O[P@](=O)(O[H])O[P@](=O)([O-])OC([H])([H])[C@@]1([H])O[C@@]([H])([n+]2c([H])c([H])c([H])c(C(=O)N([H])[H])c2[H])[C@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

@@ -104,6 +104,24 @@ SAM
  26 27  2  0
 M  CHG  2   5  -1   8   1
 M  END
+>  <LigandName>  (1) 
+SAM
+
+>  <Denticity>  (1) 
+11
+
+>  <DenticityDescription>  (1) 
+11-dentate
+
+>  <Delta_cm-1>  (1) 
+22200
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]O[C@@]1([H])[C@@]([H])(O[H])[C@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)O[C@]1([H])C([H])([H])[S@@+](C([H])([H])[H])C([H])([H])C([H])([H])[C@@]([H])(C(=O)[O-])N([H])[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

@@ -35,6 +35,18 @@ NCCN
 >  <FieldStrength>  (1) 
 moderate-strong
 
+>  <Delta_cm-1>  (1) 
+25000
+
+>  <DonorAtom>  (1) 
+N,N
+
+>  <Denticity>  (1) 
+2
+
+>  <DenticityDescription>  (1) 
+bidentate
+
 >  <MolecularWeight>  (1) 
 60.1
 

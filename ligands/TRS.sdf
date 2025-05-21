@@ -43,6 +43,24 @@ TRS
   8 20  1  0
 M  CHG  1   5   1
 M  END
+>  <LigandName>  (1) 
+TRS
+
+>  <Denticity>  (1) 
+3
+
+>  <DenticityDescription>  (1) 
+tridentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]OC([H])([H])C(C([H])([H])O[H])(C([H])([H])O[H])[N+]([H])([H])[H]
+
 >  <NetFormalCharge>  (1) 
 1
 

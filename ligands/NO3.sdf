@@ -11,6 +11,24 @@ NO3
   1  4  1  0
 M  CHG  3   1   1   3  -1   4  -1
 M  END
+>  <LigandName>  (1) 
+NO3
+
+>  <Denticity>  (1) 
+2
+
+>  <DenticityDescription>  (1) 
+bidentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+O=[N+]([O-])[O-]
+
 >  <NetFormalCharge>  (1) 
 -1
 

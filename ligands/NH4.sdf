@@ -13,6 +13,24 @@ NH4
   1  5  1  0
 M  CHG  1   1   1
 M  END
+>  <LigandName>  (1) 
+NH4
+
+>  <Denticity>  (1) 
+0
+
+>  <DenticityDescription>  (1) 
+non-dentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+default
+
+>  <SMILES>  (1) 
+[H][N+]([H])([H])[H]
+
 >  <NetFormalCharge>  (1) 
 1
 

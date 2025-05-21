@@ -13,6 +13,24 @@ SO4
   1  5  1  0
 M  CHG  2   4  -1   5  -1
 M  END
+>  <LigandName>  (1) 
+SO4
+
+>  <Denticity>  (1) 
+5
+
+>  <DenticityDescription>  (1) 
+pentadentate
+
+>  <Delta_cm-1>  (1) 
+19000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+O=S(=O)([O-])[O-]
+
 >  <NetFormalCharge>  (1) 
 -2
 

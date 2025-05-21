@@ -24,6 +24,18 @@ O=C([O-])C(=O)[O-]
 >  <FieldStrength>  (1) 
 moderate
 
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DonorAtom>  (1) 
+O,O
+
+>  <Denticity>  (1) 
+6
+
+>  <DenticityDescription>  (1) 
+hexadentate
+
 >  <MolecularWeight>  (1) 
 88.02
 

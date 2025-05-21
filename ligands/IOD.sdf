@@ -5,6 +5,24 @@ IOD
     0.0000    0.0000    0.0000 I   0  0  0  0  0  0  0  0  0  0  0  0
 M  CHG  1   1  -1
 M  END
+>  <LigandName>  (1) 
+IOD
+
+>  <Denticity>  (1) 
+1
+
+>  <DenticityDescription>  (1) 
+monodentate
+
+>  <Delta_cm-1>  (1) 
+12000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[I-]
+
 >  <NetFormalCharge>  (1) 
 -1
 

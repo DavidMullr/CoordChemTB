@@ -22,6 +22,24 @@ DMS
   4  9  1  0
   4 10  1  0
 M  END
+>  <LigandName>  (1) 
+DMS
+
+>  <Denticity>  (1) 
+2
+
+>  <DenticityDescription>  (1) 
+bidentate
+
+>  <Delta_cm-1>  (1) 
+18000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]C([H])([H])S(=O)C([H])([H])[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

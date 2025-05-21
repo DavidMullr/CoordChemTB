@@ -51,6 +51,24 @@ MAN
  10 23  1  0
  12 24  1  0
 M  END
+>  <LigandName>  (1) 
+MAN
+
+>  <Denticity>  (1) 
+5
+
+>  <DenticityDescription>  (1) 
+pentadentate
+
+>  <Delta_cm-1>  (1) 
+20000
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]OC([H])([H])[C@@]1([H])O[C@]([H])(O[H])[C@@]([H])(O[H])[C@@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

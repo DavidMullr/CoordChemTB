@@ -97,6 +97,24 @@ SAH
  24 46  1  0
  25 26  2  0
 M  END
+>  <LigandName>  (1) 
+SAH
+
+>  <Denticity>  (1) 
+9
+
+>  <DenticityDescription>  (1) 
+9-dentate
+
+>  <Delta_cm-1>  (1) 
+22444
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]OC(=O)[C@@]([H])(N([H])[H])C([H])([H])C([H])([H])SC([H])([H])[C@@]1([H])O[C@@]([H])(n2c([H])nc3c(N([H])[H])nc([H])nc32)[C@]([H])(O[H])[C@]1([H])O[H]
+
 >  <NetFormalCharge>  (1) 
 0
 

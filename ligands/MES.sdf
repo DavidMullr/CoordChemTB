@@ -54,6 +54,24 @@ MES
   9 12  1  0
 M  CHG  2   4   1  12  -1
 M  END
+>  <LigandName>  (1) 
+MES
+
+>  <Denticity>  (1) 
+4
+
+>  <DenticityDescription>  (1) 
+tetradentate
+
+>  <Delta_cm-1>  (1) 
+18666
+
+>  <DeltaConfidence>  (1) 
+estimated
+
+>  <SMILES>  (1) 
+[H]C1([H])OC([H])([H])C([H])([H])[N+]([H])(C([H])([H])C([H])([H])S(=O)(=O)[O-])C1([H])[H]
+
 >  <NetFormalCharge>  (1) 
 0
 
