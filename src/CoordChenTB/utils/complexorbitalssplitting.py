@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 from rdkit import Chem
 from difflib import get_close_matches
-from .metals_db import METALS
-
+from metals_db import METALS
 
 def load_ligand_data(sdf_file="all_ligands.sdf"):
     ligand_info = {}
