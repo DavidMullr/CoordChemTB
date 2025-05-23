@@ -131,18 +131,6 @@ from rdkit.Geometry import Point3D
 output_dir = "ligands"
 os.makedirs(output_dir, exist_ok=True)
 
-# Describe denticity
-def describe_denticity(n):
-    names = {
-        0: "non-dentate",
-        1: "monodentate",
-        2: "bidentate",
-        3: "tridentate",
-        4: "tetradentate",
-        5: "pentadentate",
-        6: "hexadentate",
-    }
-    return names.get(n, f"{n}-dentate")
 
 # Estimate denticity based on known donor SMARTS patterns
 def estimate_denticity(mol):

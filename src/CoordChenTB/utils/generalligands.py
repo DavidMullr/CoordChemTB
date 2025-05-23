@@ -5,20 +5,29 @@ import requests
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 
+# Hardcoded denticity dictionary
+HARDCODED_DENTICITY = {
+    "ACE": 1, "ACT": 1, "ADP": 3, "AMP": 3, "ATP": 4, "Acetate": 2, "Aniline": 1, "BA": 1, "BMA": 1,
+    "BR": 1, "Br⁻": 1, "CA": 1, "CH₃⁻": 1, "CL": 1, "CN⁻": 1, "CO": 1, "COA": 4, "CS": 1, "CU": 1,
+    "Cl⁻": 1, "C₂O₄²⁻": 2, "DMF": 1, "DMS": 1, "DMSO": 1, "EDO": 2, "EtOH": 1, "FAD": 4, "FE": 1,
+    "FMN": 3, "FUC": 1, "Formate": 1, "F⁻": 1, "GAL": 1, "GDP": 2, "GLC": 1, "GMP": 2, "GTP": 3,
+    "HEM": 4, "HEZ": 1, "H⁻": 1, "H₂O": 1, "IOD": 1, "Imidazole": 1, "I⁻": 1, "K": 1, "MAN": 1,
+    "MES": 1, "MG": 1, "MN": 1, "MPD": 1, "MeCN": 1, "MeOH": 1, "NA": 1, "NAD": 3, "NAG": 1,
+    "NCS⁻ (N-bound)": 1, "NH4": 1, "NH₃": 1, "NO3": 1, "NO₂⁻": 1, "NO₃⁻": 1, "OH⁻": 1, "PB": 1,
+    "PEG": 1, "PGE": 1, "PO4": 1, "PPh₃": 1, "Pyrrolidine": 1, "SAH": 3, "SAM": 3, "SCN⁻ (S-bound)": 1,
+    "SIA": 1, "SO4": 1, "SR": 1, "S²⁻": 1, "THF": 1, "TRS": 1, "ZN": 1, "bipy": 2, "en": 2, "phen": 2,
+    "py": 1
+}
+
 # Describe denticity in words
 def describe_denticity(n):
     names = {
-        0: "non-dentate",
-        1: "monodentate",
-        2: "bidentate",
-        3: "tridentate",
-        4: "tetradentate",
-        5: "pentadentate",
-        6: "hexadentate",
+        0: "non-dentate", 1: "monodentate", 2: "bidentate", 3: "tridentate",
+        4: "tetradentate", 5: "pentadentate", 6: "hexadentate"
     }
     return names.get(n, f"{n}-dentate")
 
-# Estimate denticity and Delta based on donor atoms
+# Estimate denticity and Delta based on donor atoms (WE CHANGED TO HARDCODED DENTICIY SO THIS FUNCTION IS ONLY USED FOR DELTA OCT)
 def estimate_denticity_and_delta(mol):
     smarts_rules = [
         ("[NX3;H2,H1;!$(NC=O)]", 23000),
@@ -99,7 +108,10 @@ for lig_id in default_ligand_ids:
         continue
 
     # Enrich molecule
-    denticity, denticity_desc, delta, delta_confidence = estimate_denticity_and_delta(mol)
+    denticity = HARDCODED_DENTICITY.get(lig_id, 1)
+    denticity_desc = describe_denticity(denticity)
+    _, _, delta, delta_confidence = estimate_denticity_and_delta(mol)
+
 
     mol.SetProp("LigandName", lig_id)
     mol.SetProp("Denticity", str(denticity))
@@ -242,7 +254,9 @@ for name, (smiles, field_strength, delta_cm1, donor_atom) in ligands.items():
         AllChem.UFFOptimizeMolecule(mol)
 
     # Estimate denticity
-    denticity, denticity_desc = estimate_denticity(mol)
+    denticity = HARDCODED_DENTICITY.get(name, 1)
+    denticity_desc = describe_denticity(denticity)
+
 
     # Add metadata
     mol.SetProp("LigandName", name)
