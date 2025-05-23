@@ -2,11 +2,13 @@ import os
 import io
 import math
 import importlib.machinery
+import pytest
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Chem import rdchem
-from rdkit.Geometry import Point2D
+from rdkit.Geometry import Point2D, Point3D
+from rdkit.Chem.Draw import MolToFile
 from PIL import Image
 
 # Path to metals database
@@ -24,6 +26,37 @@ OCTAHEDRAL_POS = [
     Point2D(-2.6, -1.5),  # back-left (4)
     Point2D(2.6, -1.5),   # back-right (5)
 ]
+
+# Define 2D donor positions for each geometry
+GEOMETRY_POSITIONS = {
+    'octahedral': [
+        Point2D(0.0, 3.0),
+        Point2D(0.0, -3.0),
+        Point2D(-2.6, 1.5),
+        Point2D(2.6, 1.5),
+        Point2D(-2.6, -1.5),
+        Point2D(2.6, -1.5),
+    ],
+    'tetrahedral': [
+        Point2D(1.5, 1.5),
+        Point2D(-1.5, 1.5),
+        Point2D(-1.5, -1.5),
+        Point2D(1.5, -1.5),
+    ],
+    'square_planar': [
+        Point2D(-2.0, 0.0),
+        Point2D(0.0, 2.0),
+        Point2D(2.0, 0.0),
+        Point2D(0.0, -2.0),
+    ],
+}
+
+DEFAULT_CARBON_ANGLES_BY_GEOMETRY = {
+    'octahedral': [120, 240],
+    'tetrahedral': [60, 180],
+    'square_planar': [90, 270],
+}
+
 
 # Default angles for explicit carbon placement around each donor atom
 DEFAULT_CARBON_ANGLES = [120, 240]
@@ -172,7 +205,6 @@ def load_ligand(sdf_path):
         for prop in orig.GetPropNames():
             lig.SetProp(prop, orig.GetProp(prop))
         # Generate 2D coordinates from SMILES
-        AllChem.Compute2DCoords(lig)
         return lig
     # Fallback to original SDF-loaded molecule
     return orig
@@ -222,100 +254,186 @@ def compute_carbon_position(donor_pos, angle_deg, distance=1.5):
 
 # Build coordination complex with optional custom carbon angles per octahedral site
 # carbon_angles: dict mapping octahedral position index (0-5) -> list of angles in degrees
-def build_coordination_complex(metal_smiles, ligand_mols, carbon_angles=None):
+def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral', carbon_angles=None, chain_delta_angle=60.0, chain_delta_r=0.5):
+    from rdkit.Chem import rdMolTransforms
+
+    def get_vector(p1, p2):
+        return p2.x - p1.x, p2.y - p1.y
+
+    def angle_between(v1, v2):
+        x1, y1 = v1
+        x2, y2 = v2
+        dot = x1 * x2 + y1 * y2
+        det = x1 * y2 - y1 * x2
+        return math.atan2(det, dot)
+
+    def transform_ligand_rigid(lig, donor1, donor2, target1, target2):
+        lig = Chem.Mol(lig)
+        conf = lig.GetConformer()
+        p1 = conf.GetAtomPosition(donor1)
+        p2 = conf.GetAtomPosition(donor2)
+        lig_vec = get_vector(p1, p2)
+        tgt_vec = get_vector(target1, target2)
+
+        angle = angle_between(lig_vec, tgt_vec)
+
+        cx = (p1.x + p2.x) / 2
+        cy = (p1.y + p2.y) / 2
+
+        tx = (target1.x + target2.x) / 2 - cx
+        ty = (target1.y + target2.y) / 2 - cy
+
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle)
+
+        for i in range(lig.GetNumAtoms()):
+            pos = conf.GetAtomPosition(i)
+            x, y = pos.x - cx, pos.y - cy
+            xr = x * cos_a - y * sin_a + cx + tx
+            yr = x * sin_a + y * cos_a + cy + ty
+            conf.SetAtomPosition(i, Point3D(xr, yr, 0.0))
+
+        return lig
+
+    def translate_rotate_ligand(lig, donor_idx, target_pos, direction_angle):
+        lig = Chem.Mol(lig)
+        conf = lig.GetConformer()
+
+        donor_pos = conf.GetAtomPosition(donor_idx)
+
+        # Step 1: Center donor at origin
+        dx, dy = -donor_pos.x, -donor_pos.y
+        for i in range(lig.GetNumAtoms()):
+            pos = conf.GetAtomPosition(i)
+            conf.SetAtomPosition(i, Point3D(pos.x + dx, pos.y + dy, 0.0))
+
+        # Step 2: Rotate ligand
+        cos_theta = math.cos(direction_angle)
+        sin_theta = math.sin(direction_angle)
+        for i in range(lig.GetNumAtoms()):
+            pos = conf.GetAtomPosition(i)
+            x_rot = pos.x * cos_theta - pos.y * sin_theta
+            y_rot = pos.x * sin_theta + pos.y * cos_theta
+            conf.SetAtomPosition(i, Point3D(x_rot, y_rot, 0.0))
+
+        # Step 3: Translate to target
+        for i in range(lig.GetNumAtoms()):
+            pos = conf.GetAtomPosition(i)
+            conf.SetAtomPosition(i, Point3D(pos.x + target_pos.x, pos.y + target_pos.y, 0.0))
+
+        return lig
+
+    if geometry not in GEOMETRY_POSITIONS:
+        raise ValueError(f"Unsupported geometry '{geometry}'. Choose from {list(GEOMETRY_POSITIONS)}.")
+
+    positions = GEOMETRY_POSITIONS[geometry]
     carbon_angles = validate_carbon_angles(carbon_angles) if carbon_angles else {}
 
-    # Initialize metal center
-    rw = Chem.RWMol()
+    # Create metal center
     m = Chem.MolFromSmiles(metal_smiles)
     if not m or m.GetNumAtoms() != 1:
         raise ValueError(f"Invalid metal SMILES: {metal_smiles}")
+
     metal_symbol = m.GetAtomWithIdx(0).GetSymbol()
-    metal_idx = rw.AddAtom(Chem.Atom(metal_symbol))
-    mol = rw.GetMol()
+    metal = Chem.RWMol()
+    metal_idx = metal.AddAtom(Chem.Atom(metal_symbol))
 
-    donors_per_lig = []
     bond_indices = []
-    # Attach ligands and record bonds
-    for lig in ligand_mols:
-        combo = Chem.CombineMols(mol, lig)
-        rw = Chem.RWMol(combo)
-        offset = mol.GetNumAtoms()
-        donors = get_donor_atom_indices(lig)
-        if not donors:
-            raise ValueError(f"No donor atoms in ligand {Chem.MolToSmiles(lig)}")
-        current = []
-        for d in donors:
-            di = d + offset
-            rw.AddBond(metal_idx, di, Chem.BondType.SINGLE)
-            tmp = rw.GetMol()
-            bidx = tmp.GetBondBetweenAtoms(metal_idx, di).GetIdx()
-            bond_indices.append(bidx)
-            current.append(di)
-        donors_per_lig.append(current)
-        mol = rw.GetMol()
+    full_coord_map = {metal_idx: Point2D(0.0, 0.0)}
+    donor_site_map = {}
 
-    # Place donor atoms at octahedral positions
-    coord_map = {metal_idx: Point2D(0.0, 0.0)}
+    PAIR_POSITIONS_BY_GEOMETRY = {
+        'octahedral': [(0, 2), (4, 1), (5, 3)],
+        'tetrahedral': [(0, 1), (2, 3)],
+        'square_planar': [(0, 1), (2, 3)],
+}
+    pair_positions = PAIR_POSITIONS_BY_GEOMETRY[geometry]
     used_positions = set()
-    pair_positions = [(0,2), (4,1), (5,3)]
     bidentate_count = 0
-    donor_site_map = {}  # maps donor atom idx -> octahedral site index
+    monodentate_ligs = []
+    monodentate_indices = []
 
-    # bidentate ligands
-    for donors in donors_per_lig:
+    # Handle bidentate ligands
+    for i, lig in enumerate(ligand_mols):
+        AllChem.Compute2DCoords(lig)
+        donors = get_donor_atom_indices(lig)
         if len(donors) > 1:
-            p = pair_positions[bidentate_count]
-            coord_map[donors[0]] = OCTAHEDRAL_POS[p[0]]
-            coord_map[donors[1]] = OCTAHEDRAL_POS[p[1]]
-            donor_site_map[donors[0]] = p[0]
-            donor_site_map[donors[1]] = p[1]
-            used_positions.update(p)
+            if bidentate_count >= len(pair_positions):
+                raise ValueError("Too many bidentate ligands for this geometry")
+            p0, p1 = pair_positions[bidentate_count]
+            lig = transform_ligand_rigid(lig, donors[0], donors[1], positions[p0], positions[p1])
+            site_assignments = [p0, p1]
+            used_positions.update(site_assignments)
             bidentate_count += 1
 
-    # monodentate ligands
-    rem = [i for i in range(6) if i not in used_positions]
-    mi = 0
-    for donors in donors_per_lig:
-        if len(donors) == 1:
-            site = rem[mi]
-            coord_map[donors[0]] = OCTAHEDRAL_POS[site]
-            donor_site_map[donors[0]] = site
-            mi += 1
+            combo = Chem.CombineMols(metal.GetMol(), lig)
+            rw = Chem.RWMol(combo)
+            offset = metal.GetNumAtoms()
+            conf = lig.GetConformer()
 
-    AllChem.Compute2DCoords(mol, coordMap=coord_map)
+            for j, d in enumerate(donors[:2]):
+                di = d + offset
+                rw.AddBond(metal_idx, di, Chem.BondType.SINGLE)
+                bond = rw.GetMol().GetBondBetweenAtoms(metal_idx, di)
+                bond_indices.append(bond.GetIdx())
+                donor_site_map[di] = site_assignments[j]
 
-    # Explicit carbon placement with custom angles per site
-    donor_elems = {"N", "O", "S", "P", "Cl"}
-    for atom in mol.GetAtoms():
-        if atom.GetSymbol() in donor_elems:
-            didx = atom.GetIdx()
-            dpos = coord_map.get(didx)
-            if dpos is None:
-                continue
-            site_idx = donor_site_map.get(didx)
-            # determine angles for this site
-            angles = carbon_angles.get(site_idx, DEFAULT_CARBON_ANGLES)
-            c_neigh = [nbr.GetIdx() for nbr in atom.GetNeighbors() if nbr.GetSymbol() == 'C']
-            for c_idx, ang in zip(c_neigh, angles):
-                coord_map[c_idx] = compute_carbon_position(dpos, ang)
+            for k in range(lig.GetNumAtoms()):
+                p = conf.GetAtomPosition(k)
+                full_coord_map[offset + k] = Point2D(p.x, p.y)
 
-    AllChem.Compute2DCoords(mol, coordMap=coord_map, clearConfs=True)
+            metal = rw
+            ligand_mols[i] = lig
+        else:
+            monodentate_ligs.append((lig, donors))
+            monodentate_indices.append(i)
 
-    # Set wedge/dash styling
+    # Handle monodentate ligands
+    available_sites = [i for i in range(len(positions)) if i not in used_positions]
+
+    for i, (lig, donors) in enumerate(monodentate_ligs):
+        site = available_sites[i]
+        used_positions.add(site)
+        angle = math.atan2(positions[site].y, positions[site].x)
+        lig = translate_rotate_ligand(lig, donors[0], positions[site], angle)
+
+        combo = Chem.CombineMols(metal.GetMol(), lig)
+        rw = Chem.RWMol(combo)
+        offset = metal.GetNumAtoms()
+        conf = lig.GetConformer()
+
+        di = donors[0] + offset
+        rw.AddBond(metal_idx, di, Chem.BondType.SINGLE)
+        bond = rw.GetMol().GetBondBetweenAtoms(metal_idx, di)
+        bond_indices.append(bond.GetIdx())
+        donor_site_map[di] = site
+
+        for k in range(lig.GetNumAtoms()):
+            p = conf.GetAtomPosition(k)
+            full_coord_map[offset + k] = Point2D(p.x, p.y)
+
+        metal = rw
+        ligand_mols[monodentate_indices[i]] = lig
+
+    # Final coordination map and 2D drawing
+    mol = metal.GetMol()
+    AllChem.Compute2DCoords(mol, coordMap=full_coord_map, clearConfs=True)
+
+    # Optional: Add wedge/dash for octahedral visualization
     for bidx in bond_indices:
         bond = mol.GetBondWithIdx(bidx)
         a1, a2 = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
         donor = a1 if a1 != metal_idx else a2
         site_idx = donor_site_map.get(donor)
-        if site_idx in (4,5):
-            bond.SetBondDir(rdchem.BondDir.BEGINWEDGE)
-        elif site_idx in (2,3):
-            bond.SetBondDir(rdchem.BondDir.BEGINDASH)
-   
-    mol = ensure_proper_smiles_drawing(mol)
-    #mol = reset_to_octahedral_positions(mol)
+        if geometry == 'octahedral':
+            if site_idx in (4, 5):
+                bond.SetBondDir(rdchem.BondDir.BEGINWEDGE)
+            elif site_idx in (2, 3):
+                bond.SetBondDir(rdchem.BondDir.BEGINDASH)
+
     return mol
+
+
 
 # Draw molecule to 2D image
 def draw_mol_2D(mol, img_size=(500,500), output_path=None):
@@ -340,30 +458,48 @@ def load_ligands_from_folder(path):
     return lig_map
 
 # Create and draw complex from ligand count dict with optional carbon angles per site
-def create_complex_from_ligand_dict(metal_symbol, ligand_counts, carbon_angles=None, output_file=None):
+def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral', carbon_angles=None, chain_delta_angle: float = 60.0, chain_delta_r: float = 0.5, output_file=None):
     """
-    carbon_angles: dict mapping octahedral site index (0-5) -> [angle1, angle2]
+    Create and draw a coordination complex from a ligand dictionary.
     """
     lig_map = load_ligands_from_folder(LIGAND_FOLDER)
-    total_sites = sum(len(get_donor_atom_indices(lig_map[n]))*c for n,c in ligand_counts.items())
-    if total_sites != 6:
-        raise ValueError("Total donor sites must equal 6 for octahedral geometry")
+    total_sites = sum(len(get_donor_atom_indices(lig_map[n])) * c for n, c in ligand_counts.items())
+    expected_sites = len(GEOMETRY_POSITIONS[geometry])
+    if total_sites != expected_sites:
+        raise ValueError(f"Total donor sites must equal {expected_sites} for {geometry} geometry")
+
     ligs = []
-    for n,c in ligand_counts.items():
-        ligs.extend([lig_map[n]]*c)
-    mol = build_coordination_complex(f"[{metal_symbol}+2]", ligs, carbon_angles=carbon_angles)
-    return draw_mol_2D(mol, output_path=output_file)
+    for n, c in ligand_counts.items():
+        ligs.extend([lig_map[n]] * c)
+
+    mol = build_coordination_complex(
+        metal_smiles=f"[{metal}+2]",
+        ligand_mols=ligs,
+        geometry=geometry,
+        carbon_angles=carbon_angles,
+        chain_delta_angle=chain_delta_angle,
+        chain_delta_r=chain_delta_r
+    )
+
+    img = draw_mol_2D(mol, output_path=output_file)
+
+    if output_file and os.path.exists(output_file):
+        im = Image.open(output_file)
+        im.show()
+
+    return img
 
 # --- Angle selection ---
 # Define your custom angles here, keyed by site index (0-5). Remove entries to use DEFAULT_CARBON_ANGLES.
 CARBON_ANGLE_SELECTION = {
-     0: [150, 30],  # top
+     0: [30, 150],  # top
      1: [210, 330],  # bottom
      2: [90, 210],  # back-left
      3: [330, 90],  # back-right
-     4: [270, 150],  # front-left
-     5: [30, 270],  # front-right
+     4: [150, 270],  # front-left
+     5: [270, 30],  # front-right
 }
+
 
 from difflib import get_close_matches
 
@@ -383,57 +519,61 @@ def find_closest_ligand(name, lig_map):
         pass
     return None
 
-if __name__ == '__main__':
-    ligands = load_ligands_from_folder(LIGAND_FOLDER)
-
-    if not ligands:
-        print("❌ No ligands found in folder.")
-        exit()
-
-    print("✅ Available ligands:")
-    print(", ".join(sorted(ligands)))
+if __name__ == "__main__":
+    print("🎨 Coordination Complex Builder")
+    lig_map = load_ligands_from_folder(LIGAND_FOLDER)
+    print(f"✅ Found {len(lig_map)} ligands:", ", ".join(sorted(lig_map.keys())))
 
     metal = input("Enter metal symbol (e.g., Fe): ").strip()
-    ligand_counts = {}
 
-    print("\nEnter ligands and counts (type 'done' to finish):")
+    geometry = input("Enter geometry (octahedral/tetrahedral/square_planar): ").strip().lower()
+    if geometry not in GEOMETRY_POSITIONS:
+        print("❌ Unsupported geometry.")
+        exit()
+
+    ligand_counts = {}
+    print("➕ Enter ligand names and counts. Type 'done' to finish.")
     while True:
         name = input("Ligand name: ").strip()
-        if name.lower() == "done":
+        if name.lower() == 'done':
             break
-        if name not in ligands:
-            suggested = find_closest_ligand(name, ligands)
+        if name not in lig_map:
+            suggested = find_closest_ligand(name, lig_map)
             if not suggested:
-                print("❌ Ligand not recognized.")
+                print("❌ Ligand not found.")
                 continue
             name = suggested
         try:
-            count = int(input(f"How many '{name}' ligands? "))
+            count = int(input(f"How many of '{name}'? "))
             ligand_counts[name] = count
         except ValueError:
             print("❌ Invalid number.")
 
     if not ligand_counts:
-        print("❌ No ligands selected.")
+        print("⚠️ No ligands provided. Exiting.")
         exit()
 
-    total_sites = sum(len(get_donor_atom_indices(ligands[n])) * c for n, c in ligand_counts.items())
+    total_sites = sum(len(get_donor_atom_indices(lig_map[n])) * c for n, c in ligand_counts.items())
+    expected_sites = len(GEOMETRY_POSITIONS[geometry])
     print(f"\n🧮 Total donor sites: {total_sites}")
-    if total_sites != 6:
-        proceed = input("⚠️ Expected 6 donor sites. Continue anyway? (y/N): ").strip().lower()
-        if proceed != "y":
-            print("❌ Aborting.")
+    if total_sites != expected_sites:
+        print(f"⚠️ For {geometry} complexes, you need exactly {expected_sites} donor sites.")
+        confirm = input("Continue anyway? (y/N): ").strip().lower()
+        if confirm != 'y':
+            print("❌ Aborted.")
             exit()
 
+    out_file = f"{metal}_{geometry}_{'_'.join(f'{k}{v}' for k, v in ligand_counts.items())}.png"
     try:
-        lig_list = [ligands[n] for n in ligand_counts for _ in range(ligand_counts[n])]
-        mol = build_coordination_complex(f"[{metal}+2]", lig_list, carbon_angles=CARBON_ANGLE_SELECTION)
-        img = draw_mol_2D(mol)
-        if input("💾 Save image? (y/N): ").strip().lower() == 'y':
-            out = f"{metal}_{'_'.join(f'{k}{v}' for k,v in ligand_counts.items())}.png"
-            img.save(out)
-            print(f"✅ Image saved as {out}")
-        else:
-            img.show()
+        img = create_complex_from_ligand_dict(
+            metal=metal,
+            ligand_counts=ligand_counts,
+            geometry=geometry,
+            carbon_angles=CARBON_ANGLE_SELECTION,
+            output_file=out_file
+        )
+        print(f"✅ Complex image saved to {out_file}")
+        img.show()
     except Exception as e:
-        print(f"❌ Error creating complex: {e}")
+        print(f"❌ Failed to create complex: {e}")
+
