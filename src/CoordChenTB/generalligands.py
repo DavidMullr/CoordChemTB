@@ -55,8 +55,7 @@ def estimate_denticity_and_delta(mol):
 
 # Ligand input
 default_ligand_ids = [
-    'ATP', 'ADP', 'AMP', 'GTP', 'GDP', 'GMP', 'NAD', 'FAD', 'FMN', 'HEM',
-    'COA', 'SAM', 'SAH', 'NAG', 'MAN', 'GLC', 'GAL', 'FUC', 'SIA', 'BMA',
+    'NAD', 'FAD', 'FMN', 'HEM', 'COA', 'SAM', 'SAH', 'NAG', 'MAN', 'GLC', 'GAL', 'FUC', 'SIA', 'BMA',
     'SO4', 'PO4', 'CL', 'MG', 'CA', 'ZN', 'FE', 'CU', 'MN', 'CO',
     'NO3', 'NH4', 'K', 'NA', 'IOD', 'BR', 'CS', 'SR', 'BA', 'PB',
     'EDO', 'DMS', 'PEG', 'MPD', 'ACT', 'ACE', 'TRS', 'MES', 'HEZ', 'PGE'
