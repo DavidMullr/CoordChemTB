@@ -64,7 +64,22 @@ def analyze_complex():
 def build_and_draw_complex():
     print("\n🎨 Build Coordination Complex")
     metal = input("Enter metal symbol (e.g., Fe): ").strip()
-    geometry = input("Geometry (octahedral/tetrahedral/square_planar): ").strip()
+    print("Choose geometry:")
+    print("1) Octahedral")
+    print("2) Tetrahedral")
+    print("3) Square planar")
+    geometry_input = input("Enter number [1-3]: ").strip()
+    geometry_map = {"1": "octahedral", "2": "tetrahedral", "3": "square_planar"}
+    geometry = geometry_map.get(geometry_input)
+    if not geometry:
+        print("❌ Invalid geometry selection.")
+        return
+    try:
+        bond_length = float(input("Enter bond length (useful for bulky ligands) (default is 1): ").strip() or "1")
+    except ValueError:
+        print("❌ Invalid bond length. Using default of 1.")
+        bond_length = 1
+
 
     print("Enter ligands and counts (type 'done' to finish):")
     ligand_counts = {}
@@ -87,8 +102,10 @@ def build_and_draw_complex():
             ligand_counts=ligand_counts,
             geometry=geometry,
             carbon_angles=drawer.CARBON_ANGLE_SELECTION,
-            output_file=output_filename
+            output_file=output_filename,
+            bond_length=bond_length
         )
+
         print(f"✅ Image saved to {output_filename}")
 
     except Exception as e:
@@ -118,6 +135,16 @@ def lookup_ligand_or_metal():
             else:
                 print("❌ Name not recognized as ligand or metal.")
 
+####DOESN'T WORK PLEASE LAUNCH DIRECLY FRON INTERFACE2.py
+
+def launch_gui():
+    try:
+        from CoordChenTB.utils.interface2 import CoordinationGUI
+        app = CoordinationGUI()
+        app.mainloop()
+    except Exception as e:
+        print(f"❌ Failed to launch GUI: {e}")
+
 
 
 def main():
@@ -128,7 +155,8 @@ CoordChemTB CLI
 1) Analyze ligand field / spin state
 2) Build & draw coordination complex
 3) Lookup ligand/metal info
-4) Exit
+4) Launch GUI [DOESN'T WORK PLEASE LAUNCH GUI DIRECTLY FROM INTERFACE2.py]
+5) Exit
 """)
         choice = input("→ Choose an option: ").strip()
         if choice == '1':
@@ -138,6 +166,8 @@ CoordChemTB CLI
         elif choice == '3':
             lookup_ligand_or_metal()
         elif choice == '4':
+            launch_gui()
+        elif choice == '5':
             print("👋 Goodbye!")
             break
         else:

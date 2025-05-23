@@ -28,6 +28,9 @@ OCTAHEDRAL_POS = [
     Point2D(2.6, -1.5),   # back-right (5)
 ]
 
+BOND_LENGTH = 1 # bond length that can be changed to have longer/shorter bonds
+
+
 # Define 2D donor positions for each geometry
 GEOMETRY_POSITIONS = {
     'octahedral': [
@@ -286,7 +289,7 @@ def compute_carbon_position(donor_pos, angle_deg, distance=1.5):
 # carbon_angles: dict mapping octahedral position index (0-5) -> list of angles in degrees
 
 
-def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral', carbon_angles=None, chain_delta_angle=60.0, chain_delta_r=0.5):
+def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral', carbon_angles=None, chain_delta_angle=60.0, chain_delta_r=0.5, bond_length=BOND_LENGTH):
     from rdkit.Chem import rdMolTransforms
 
     def get_vector(p1, p2):
@@ -397,7 +400,7 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
     if geometry not in GEOMETRY_POSITIONS:
         raise ValueError(f"Unsupported geometry '{geometry}'. Choose from {list(GEOMETRY_POSITIONS)}.")
 
-    positions = GEOMETRY_POSITIONS[geometry]
+    positions = [Point2D(p.x * bond_length, p.y * bond_length) for p in GEOMETRY_POSITIONS[geometry]]
     carbon_angles = validate_carbon_angles(carbon_angles) if carbon_angles else {}
 
     # Create metal center
@@ -530,7 +533,8 @@ def load_ligands_from_folder(path):
     return lig_map
 
 # Create and draw complex from ligand count dict with optional carbon angles per site
-def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral', carbon_angles=None, chain_delta_angle: float = 60.0, chain_delta_r: float = 0.5, output_file=None):
+def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral', carbon_angles=None, chain_delta_angle: float = 60.0, chain_delta_r: float = 0.5, output_file=None, bond_length=1):
+
     """
     Create and draw a coordination complex from a ligand dictionary.
     """
@@ -545,13 +549,15 @@ def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral',
         ligs.extend([lig_map[n]] * c)
 
     mol = build_coordination_complex(
-        metal_smiles=f"[{metal}]",  # Oxidation state is now included in the metal string
+        metal_smiles=f"[{metal}]",
         ligand_mols=ligs,
         geometry=geometry,
         carbon_angles=carbon_angles,
         chain_delta_angle=chain_delta_angle,
-        chain_delta_r=chain_delta_r
+        chain_delta_r=chain_delta_r,
+        bond_length=bond_length
     )
+
 
     img = draw_mol_2D(mol, output_path=output_file)
 
@@ -641,6 +647,11 @@ if __name__ == "__main__":
     if not geometry:
         print("❌ Invalid selection.")
         exit()
+    try:
+        bond_length = float(input("Enter bond length (useful for bulky ligands) (default is 1): ").strip() or "1")
+    except ValueError:
+        print("❌ Invalid bond length. Using default 1.0.")
+        bond_length = 1.0
 
     ligand_counts = {}
     print("➕ Enter ligand names and counts. Type 'done' to finish.")
@@ -679,12 +690,14 @@ if __name__ == "__main__":
         # Include oxidation state in the metal string
         metal_with_oxidation = f"{metal}+{oxidation_state}" if oxidation_state != 0 else metal
         img = create_complex_from_ligand_dict(
-            metal=metal_with_oxidation,  # Now includes oxidation state
+            metal=metal_with_oxidation,
             ligand_counts=ligand_counts,
             geometry=geometry,
             carbon_angles=CARBON_ANGLE_SELECTION,
-            output_file=out_file
+            output_file=out_file,
+            bond_length=bond_length
         )
+
         print(f"✅ Complex image saved to {out_file}")
         img.show()
     except Exception as e:

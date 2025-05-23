@@ -64,11 +64,9 @@ def estimate_denticity_and_delta(mol):
 
 # Ligand input
 default_ligand_ids = [
-    'ATP', 'ADP', 'AMP', 'GTP', 'GDP', 'GMP', 'NAD', 'FAD', 'FMN', 'HEM',
-    'COA', 'SAM', 'SAH', 'NAG', 'MAN', 'GLC', 'GAL', 'FUC', 'SIA', 'BMA',
-    'SO4', 'PO4', 'CL', 'MG', 'CA', 'ZN', 'FE', 'CU', 'MN', 'CO',
-    'NO3', 'NH4', 'K', 'NA', 'IOD', 'BR', 'CS', 'SR', 'BA', 'PB',
-    'EDO', 'DMS', 'PEG', 'MPD', 'ACT', 'ACE', 'TRS', 'MES', 'HEZ', 'PGE'
+    'SO4', 'PO4', 'CO',
+    'NO3', 'NH4', 'IOD',
+    'EDO', 'DMS' 'MPD', 'ACT', 'ACE'
 ]
 
 print("\nYou can add extra RCSB ligand codes (3-letter), or press ENTER to skip.")
@@ -301,7 +299,7 @@ for filename in os.listdir(output_dir):
         except Exception as e:
             print(f"❌ Error processing {filename}: {e}")
 
-# 
+
 # COMBINING ALL SDF FILES IN 1 FILE FOR EASIER LATER USE
 
 combined_writer = Chem.SDWriter("all_ligands.sdf")
