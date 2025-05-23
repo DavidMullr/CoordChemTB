@@ -11,25 +11,14 @@ from rdkit.Chem import rdchem
 from rdkit.Geometry import Point2D, Point3D
 from rdkit.Chem.Draw import MolToFile
 from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 
 # Path to metals database
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from CoordChenTB.utils.metals_db import METALS
-
-# Octahedral 2D positions for donor placement
-OCTAHEDRAL_POS = [
-    Point2D(0.0, 3.0),    # top (0)
-    Point2D(0.0, -3.0),   # bottom (1)
-    Point2D(-2.6, 1.5),   # front-left (2)
-    Point2D(2.6, 1.5),    # front-right (3)
-    Point2D(-2.6, -1.5),  # back-left (4)
-    Point2D(2.6, -1.5),   # back-right (5)
-]
-
-BOND_LENGTH = 1 # bond length that can be changed to have longer/shorter bonds
-
 
 # Define 2D donor positions for each geometry
 GEOMETRY_POSITIONS = {
@@ -41,13 +30,13 @@ GEOMETRY_POSITIONS = {
         Point2D(-2.6, -1.5),
         Point2D(2.6, -1.5),
     ],
-    'tetrahedral': [
+    'square_planar': [
         Point2D(1.5, 1.5),
         Point2D(-1.5, 1.5),
         Point2D(-1.5, -1.5),
         Point2D(1.5, -1.5),
     ],
-    'square_planar': [
+    'tetrahedral': [
         Point2D(-2.0, 0.0),
         Point2D(0.0, 2.0),
         Point2D(2.0, 0.0),
@@ -61,6 +50,7 @@ DEFAULT_CARBON_ANGLES_BY_GEOMETRY = {
     'square_planar': [90, 270],
 }
 
+bond_length = 1 #To later on change bond length
 
 # Default angles for explicit carbon placement around each donor atom
 DEFAULT_CARBON_ANGLES = [120, 240]
@@ -94,105 +84,6 @@ def validate_carbon_angles(angles_dict):
         validated[site] = validated_angles
     return validated
 
-def reset_to_octahedral_positions(mol):
-    """Reset all donor atoms to their original OCTAHEDRAL_POS positions."""
-    if mol is None:
-        raise ValueError("Input molecule is None")
-    
-    rw = Chem.RWMol(mol)
-    conf = rw.GetConformer()
-    
-    # Find metal center (ensure we have one)
-    metal_idx = None
-    for atom in rw.GetAtoms():
-        if atom.GetSymbol() in METALS:
-            metal_idx = atom.GetIdx()
-            break
-    
-    if metal_idx is None:
-        raise ValueError("No metal atom found in molecule")
-    
-    # Set metal to origin
-    conf.SetAtomPosition(metal_idx, Point2D(0, 0, 0))
-    
-    # Find donor atoms (connected to metal)
-    donors = []
-    for bond in rw.GetBonds():
-        a1, a2 = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
-        if a1 == metal_idx:
-            donors.append(a2)
-        elif a2 == metal_idx:
-            donors.append(a1)
-    
-    # Verify we have exactly 6 donors for octahedral
-    if len(donors) != 6:
-        raise ValueError(f"Expected 6 donor atoms, found {len(donors)}")
-    
-    # Create coordinate map for metal and donors
-    coord_map = {metal_idx: Point2D(0, 0)}
-    for i, donor_idx in enumerate(donors):
-        if i < len(OCTAHEDRAL_POS):
-            pos = OCTAHEDRAL_POS[i]
-            coord_map[donor_idx] = pos
-            conf.SetAtomPosition(donor_idx, Point2D(pos.x, pos.y, 0))
-    
-    # Recompute coordinates while keeping metal and donors fixed
-    AllChem.Compute2DCoords(rw, coordMap=coord_map, clearConfs=True)
-    
-    return rw.GetMol()
-
-def ensure_proper_smiles_drawing(mol):
-    """Ensure SMILES are correctly drawn while preserving ligand positions.
-    
-    Args:
-        mol: RDKit molecule object of the coordination complex
-        
-    Returns:
-        RDKit molecule with proper SMILES drawing but preserved ligand positions
-    """
-    # Create a copy of the molecule to work with
-    mol_copy = Chem.Mol(mol)
-    
-    # Store the original coordinates
-    original_conformer = mol_copy.GetConformer()
-    original_coords = {}
-    for i in range(mol_copy.GetNumAtoms()):
-        pos = original_conformer.GetAtomPosition(i)
-        original_coords[i] = Point2D(pos.x, pos.y)
-    
-    # Generate a clean 2D structure from SMILES
-    AllChem.Compute2DCoords(mol_copy)
-    
-    # Now reapply our original coordinates for the metal and donor atoms
-    # We'll identify these by their connectivity to the metal
-    metal_idx = None
-    for atom in mol_copy.GetAtoms():
-        if atom.GetSymbol() in METALS:
-            metal_idx = atom.GetIdx()
-            break
-    
-    if metal_idx is None:
-        return mol_copy  # No metal found, return the cleaned version
-    
-    # Find all atoms directly bonded to the metal
-    donor_indices = []
-    for bond in mol_copy.GetBonds():
-        a1, a2 = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
-        if a1 == metal_idx:
-            donor_indices.append(a2)
-        elif a2 == metal_idx:
-            donor_indices.append(a1)
-    
-    # Create a coordinate map for the metal and donors
-    coord_map = {}
-    for idx in [metal_idx] + donor_indices:
-        if idx in original_coords:
-            coord_map[idx] = original_coords[idx]
-    
-    # Recompute coordinates while keeping metal and donors fixed
-    AllChem.Compute2DCoords(mol_copy, coordMap=coord_map, clearConfs=True)
-    
-    return mol_copy
 #Load a ligand from SDF, but build from its SMILES if available
 def load_ligand(sdf_path):
     suppl = Chem.SDMolSupplier(sdf_path)
@@ -213,6 +104,44 @@ def load_ligand(sdf_path):
     # Fallback to original SDF-loaded molecule
     return orig
 
+def predict_4coordinate_geometry(metal_smiles, ligand_smiles_list):
+    """
+    Predicts tetrahedral vs. square planar geometry for a 4-coordinate complex.
+    Simplified rules:
+    - d⁸ metals (Ni²⁺, Pd²⁺, Pt²⁺) → square planar
+    - 4d/5d metals → square planar
+    - Everything else → tetrahedral
+    """
+    # Parse metal
+    metal_mol = Chem.MolFromSmiles(metal_smiles)
+    if not metal_mol or metal_mol.GetNumAtoms() != 1:
+        raise ValueError("Invalid metal SMILES")
+    
+    metal_symbol = metal_mol.GetAtomWithIdx(0).GetSymbol()
+    metal_info = next((m for m in METALS if m.get("symbol") == metal_symbol), None)
+    if not metal_info:
+        raise ValueError(f"Metal {metal_symbol} not found in database")
+    
+    # Get metal properties
+    oxidation_state = metal_info.get("common_oxidation_state", 2)
+    block = metal_info.get("block", "")
+    atomic_number = metal_info.get("atomic_number", 0)
+    
+    # Calculate d-electrons
+    if block == '3d':
+        d_electrons = (atomic_number - 21) - oxidation_state  # 3d starts at Sc (21)
+    elif block in ('4d', '5d'):
+        d_electrons = (atomic_number - 39) - oxidation_state  # 4d starts at Y (39)
+    else:
+        d_electrons = 0
+    
+    # Decision logic
+    if d_electrons == 8:  # Ni²⁺, Pd²⁺, Pt²⁺
+        return "square_planar"
+    elif block in ('4d', '5d'):  # All other 4d/5d metals
+        return "square_planar"
+    else:  # Everything else
+        return "tetrahedral"
 # Identify donor atom indices
 # Define donor atom priority (higher priority first)
 DONOR_PRIORITY = ["O", "N", "S", "P", "Cl"]
@@ -279,17 +208,12 @@ def get_donor_atom_indices(lig):
     candidate_atoms.sort(key=lambda x: DONOR_PRIORITY.index(x[1]))
     return [idx for idx, sym in candidate_atoms]
 # Compute explicit carbon positioning around a donor atom
-def compute_carbon_position(donor_pos, angle_deg, distance=1.5):
-    angle_rad = math.radians(angle_deg)
-    cx = donor_pos.x + distance * math.cos(angle_rad)
-    cy = donor_pos.y + distance * math.sin(angle_rad)
-    return Point2D(cx, cy)
 
 # Build coordination complex with optional custom carbon angles per octahedral site
 # carbon_angles: dict mapping octahedral position index (0-5) -> list of angles in degrees
 
 
-def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral', carbon_angles=None, chain_delta_angle=60.0, chain_delta_r=0.5, bond_length=BOND_LENGTH):
+def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral', carbon_angles=None, chain_delta_angle=60.0, chain_delta_r=0.5, bond_length=1.0):
     from rdkit.Chem import rdMolTransforms
 
     def get_vector(p1, p2):
@@ -357,56 +281,33 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
             conf.SetAtomPosition(i, Point3D(pos.x + target_pos.x, pos.y + target_pos.y, 0.0))
         
         return lig
-    def place_ligand_conditional_flip(ligand, donor_idx, metal_pos):
-        """Flip ligand ONLY if its first heavy neighbor points toward the metal."""
-        # 1) Get donor and metal positions
-        conf = ligand.GetConformer()
-        donor_pos = conf.GetAtomPosition(donor_idx)
-        dx, dy = metal_pos.x - donor_pos.x, metal_pos.y - donor_pos.y
-        base_angle = math.atan2(dy, dx)  # Angle from donor to metal
 
-        # 2) Place ligand initially
-        lig_placed = translate_rotate_ligand(ligand, donor_idx, metal_pos, base_angle)
-        conf = lig_placed.GetConformer()
-
-        # 3) Find the first heavy neighbor (not H, not metal)
-        donor_atom = lig_placed.GetAtomWithIdx(donor_idx)
-        neighbor_idx = None
-        for nbr in donor_atom.GetNeighbors():
-            if nbr.GetAtomicNum() > 1:  # Exclude hydrogens
-                neighbor_idx = nbr.GetIdx()
-                break
-
-        if neighbor_idx is None:
-            return lig_placed  # No heavy neighbor (e.g., H-only ligand), skip flip check
-
-        # 4) Compare vectors:
-        #    v1 = donor -> neighbor (ligand direction)
-        #    v2 = donor -> metal
-        neighbor_pos = conf.GetAtomPosition(neighbor_idx)
-        v_lig = (neighbor_pos.x - donor_pos.x, neighbor_pos.y - donor_pos.y)
-        v_met = (metal_pos.x - donor_pos.x, metal_pos.y - donor_pos.y)
-
-        # 5) Flip ONLY if the angle between v_lig and v_met is < 90°
-        dot = v_lig[0] * v_met[0] + v_lig[1] * v_met[1]  # Dot product
-        if dot > 30:  # cos(θ) > 0 → θ < 90° → pointing toward metal
-            lig_placed = translate_rotate_ligand(
-                ligand, donor_idx, metal_pos, base_angle + math.pi
-            )
-
-        return lig_placed
-    
 
     if geometry not in GEOMETRY_POSITIONS:
         raise ValueError(f"Unsupported geometry '{geometry}'. Choose from {list(GEOMETRY_POSITIONS)}.")
 
-    positions = [Point2D(p.x * bond_length, p.y * bond_length) for p in GEOMETRY_POSITIONS[geometry]]
+    positions = GEOMETRY_POSITIONS[geometry]
+    positions = [Point2D(p.x * bond_length, p.y * bond_length) for p in positions]
     carbon_angles = validate_carbon_angles(carbon_angles) if carbon_angles else {}
+    total_donors = sum(len(get_donor_atom_indices(lig)) for lig in ligand_mols)
 
-    # Create metal center
     m = Chem.MolFromSmiles(metal_smiles)
     if not m or m.GetNumAtoms() != 1:
         raise ValueError(f"Invalid metal SMILES: {metal_smiles}")
+
+
+    if geometry is None:
+        if total_donors == 4:
+            ligand_smiles_list = [Chem.MolToSmiles(lig) for lig in ligand_mols]
+            geometry = predict_4coordinate_geometry(metal_smiles, ligand_smiles_list)
+        elif total_donors == 6:
+            geometry = "octahedral"
+        else:
+            raise ValueError(f"Unsupported number of donor atoms: {total_donors}")
+        # Create metal center
+        m = Chem.MolFromSmiles(metal_smiles)
+        if not m or m.GetNumAtoms() != 1:
+            raise ValueError(f"Invalid metal SMILES: {metal_smiles}")
 
     metal_symbol = m.GetAtomWithIdx(0).GetSymbol()
     metal = Chem.RWMol()
@@ -471,7 +372,6 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
         used_positions.add(site)
         angle = math.atan2(positions[site].y, positions[site].x)
         lig = translate_rotate_ligand(lig, donors[0], positions[site], angle)
-        lig = place_ligand_conditional_flip(lig, donors[0], positions[site])
         combo = Chem.CombineMols(metal.GetMol(), lig)
         rw = Chem.RWMol(combo)
         offset = metal.GetNumAtoms()
@@ -489,10 +389,13 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
 
         metal = rw
         ligand_mols[monodentate_indices[i]] = lig
-
+    
     # Final coordination map and 2D drawing
     mol = metal.GetMol()
+    
     AllChem.Compute2DCoords(mol, coordMap=full_coord_map, clearConfs=True)
+
+    total_donors = sum(len(get_donor_atom_indices(lig)) for lig in ligand_mols)
 
     # Optional: Add wedge/dash for octahedral visualization
     for bidx in bond_indices:
@@ -505,23 +408,154 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
                 bond.SetBondDir(rdchem.BondDir.BEGINWEDGE)
             elif site_idx in (2, 3):
                 bond.SetBondDir(rdchem.BondDir.BEGINDASH)
-    
+        elif geometry == 'tetrahedral':
+            if site_idx == 0:  # position 0 gets dash
+                bond.SetBondDir(rdchem.BondDir.BEGINDASH)
+            elif site_idx == 3:  # position 3 gets wedge
+                bond.SetBondDir(rdchem.BondDir.BEGINWEDGE)
     return mol
 
 
 
 # Draw molecule to 2D image
-def draw_mol_2D(mol, img_size=(500,500), output_path=None):
+def draw_mol_2D(mol, img_size=(2000,2000), output_path=None, ligand_mols=None, metal_smiles=None):
     drawer = rdMolDraw2D.MolDraw2DCairo(*img_size)
     opts = drawer.drawOptions()
     opts.includeAtomTags = False
     opts.wedgeStrokeWidth = 10
+    opts.getBackgroundColour = lambda: (1, 1, 1)  # White background
+
+    opts.bondLineWidth = 2
+    opts.scaleBondWidth = False
+    opts.scale = 0.8  # Reduced from default 1.0 to zoom out
+
+    total_charge = 0
+    if metal_smiles:
+        # Parse oxidation state from metal SMILES
+        if '+' in metal_smiles:
+            charge_part = metal_smiles.split('+')[1].rstrip(']')
+            if charge_part.isdigit():
+                total_charge = int(charge_part)
+            else:
+                total_charge = len(charge_part)  # For cases like [Fe++]
+        
+    if ligand_mols:
+        for lig in ligand_mols:
+            if lig.HasProp("NetFormalCharge"):
+                try:
+                    total_charge += int(lig.GetProp("NetFormalCharge"))
+                except ValueError:
+                    pass
+
+    # Draw the molecule first to get coordinates
     drawer.DrawMolecule(mol)
     drawer.FinishDrawing()
+    
+    # Get the image and convert to PIL
     img = Image.open(io.BytesIO(drawer.GetDrawingText()))
+    draw = ImageDraw.Draw(img)
+    
+    # Get all atomic positions in image coordinates
+    atom_positions = []
+    for atom in mol.GetAtoms():
+        point = drawer.GetDrawCoords(atom.GetIdx())
+        atom_positions.append((point.x, point.y))
+    
+    if not atom_positions:
+        if output_path:
+            img.save(output_path)
+        return img
+    
+    # Get bounding box in image coordinates
+    min_x = min(p[0] for p in atom_positions)
+    max_x = max(p[0] for p in atom_positions)
+    min_y = min(p[1] for p in atom_positions)
+    max_y = max(p[1] for p in atom_positions)
+    
+    # Increased bracket parameters for more space
+    bracket_padding = 55  # Increased from 15 (space between molecule and brackets)
+    bracket_thickness = 3  # Line width
+    bracket_extension = 20  # Increased from 20 (length of horizontal lines)
+    
+    # Left bracket ([)
+    left = min_x - bracket_padding
+    draw.line([(left, min_y - bracket_padding), 
+              (left, max_y + bracket_padding)], 
+              fill="black", width=bracket_thickness)
+    draw.line([(left, min_y - bracket_padding), 
+              (left + bracket_extension, min_y - bracket_padding)], 
+              fill="black", width=bracket_thickness)
+    draw.line([(left, max_y + bracket_padding), 
+              (left + bracket_extension, max_y + bracket_padding)], 
+              fill="black", width=bracket_thickness)
+    
+    # Right bracket (])
+    right = max_x + bracket_padding
+    draw.line([(right, min_y - bracket_padding), 
+              (right, max_y + bracket_padding)], 
+              fill="black", width=bracket_thickness)
+    draw.line([(right - bracket_extension, min_y - bracket_padding), 
+              (right, min_y - bracket_padding)], 
+              fill="black", width=bracket_thickness)
+    draw.line([(right - bracket_extension, max_y + bracket_padding), 
+              (right, max_y + bracket_padding)], 
+              fill="black", width=bracket_thickness)
+    
+    # Draw charge notation (only if non-zero)
+    charge_text = None
+    if total_charge != 0:
+        charge_text = f"{abs(total_charge)}{'+' if total_charge > 0 else '-'}"
+        if abs(total_charge) == 1:
+            charge_text = charge_text[0]  # Remove the 1 for single charges
+
+    if charge_text:
+        # Position at top-right of right bracket
+        text_x = right + 20
+        text_y = min_y - bracket_padding - 30
+
+        # Calculate font size based on image dimensions
+        font_size = int(min(img_size) * 0.08)  # 8% of smaller dimension
+
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except:
+            font = ImageFont.load_default()
+
+        # Adjust position to avoid clipping
+        temp_img = Image.new('RGB', (1, 1))
+        temp_draw = ImageDraw.Draw(temp_img)
+        text_bbox = temp_draw.textbbox((0, 0), charge_text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+
+        if text_x + text_width > img_size[0]:
+            text_x = img_size[0] - text_width - 30
+        if text_y + text_height > img_size[1]:
+            text_y = img_size[1] - text_height - 30
+
+        draw.text(
+            (text_x, text_y),
+            charge_text,
+            fill="black",
+            font=font,
+            stroke_width=max(2, int(font_size * 0.1)),
+            stroke_fill="white"
+        )
+
+    # Final cropping
+    margin = 50
+    bbox = (
+        max(0, min_x - bracket_padding - bracket_extension - margin),
+        max(0, min_y - bracket_padding - margin),
+        min(img_size[0], max_x + bracket_padding + bracket_extension + margin + 50),  # Extra space for charge
+        min(img_size[1], max_y + bracket_padding + margin)
+    )
+
+
     if output_path:
         img.save(output_path)
     return img
+
 
 # Load all ligands from folder
 LIGAND_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "ligands"))
@@ -533,14 +567,13 @@ def load_ligands_from_folder(path):
     return lig_map
 
 # Create and draw complex from ligand count dict with optional carbon angles per site
-def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral', carbon_angles=None, chain_delta_angle: float = 60.0, chain_delta_r: float = 0.5, output_file=None, bond_length=1):
-
-    """
-    Create and draw a coordination complex from a ligand dictionary.
-    """
+def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral', carbon_angles=None, 
+                                  chain_delta_angle: float = 60.0, chain_delta_r: float = 0.5, 
+                                  output_file=None, oxidation_state=0, bond_length=1.0):
     lig_map = load_ligands_from_folder(LIGAND_FOLDER)
     total_sites = sum(len(get_donor_atom_indices(lig_map[n])) * c for n, c in ligand_counts.items())
     expected_sites = len(GEOMETRY_POSITIONS[geometry])
+    
     if total_sites != expected_sites:
         raise ValueError(f"Total donor sites must equal {expected_sites} for {geometry} geometry")
 
@@ -555,19 +588,22 @@ def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral',
         carbon_angles=carbon_angles,
         chain_delta_angle=chain_delta_angle,
         chain_delta_r=chain_delta_r,
-        bond_length=bond_length
+        bond_length=bond_length 
+)
+
+
+    img = draw_mol_2D(
+        mol, 
+        output_path=output_file,
+        ligand_mols=ligs,
+        metal_smiles=f"[{metal}+{oxidation_state}]" if oxidation_state != 0 else f"[{metal}]"
     )
-
-
-    img = draw_mol_2D(mol, output_path=output_file)
 
     if output_file and os.path.exists(output_file):
         im = Image.open(output_file)
         im.show()
 
     return img
-
-
 # --- Angle selection ---
 # Define your custom angles here, keyed by site index (0-5). Remove entries to use DEFAULT_CARBON_ANGLES.
 CARBON_ANGLE_SELECTION = {
@@ -598,22 +634,20 @@ def find_closest_ligand(name, lig_map):
         pass
     return None
 
+# Replace the geometry input section in the __main__ block with this:
 if __name__ == "__main__":
     print("🎨 Coordination Complex Builder")
     lig_map = load_ligands_from_folder(LIGAND_FOLDER)
-    print(f"✅ Found {len(lig_map)} ligands:", ", ".join(sorted(lig_map.keys())))
-
+    
     metal = input("Enter metal symbol (e.g., Fe): ").strip().capitalize()
     
-    # Find metal in METALS list with error handling
+    # Get metal info (existing code)
     metal_info = None
     try:
         for m in METALS:
-            # Handle case where m might not be a dictionary or lacks 'symbol' key
-            if isinstance(m, dict) and 'symbol' in m:
-                if m['symbol'].upper() == metal.upper():
-                    metal_info = m
-                    break
+            if isinstance(m, dict) and 'symbol' in m and m['symbol'].upper() == metal.upper():
+                metal_info = m
+                break
     except Exception as e:
         print(f"⚠️ Error accessing metals database: {e}")
 
@@ -621,9 +655,8 @@ if __name__ == "__main__":
         print(f"⚠️ Warning: Metal {metal} not found in database. Using default +2")
         oxidation_state = 2
     else:
-        # Safely get oxidation states with default [2] if not specified
         available_states = metal_info.get('oxidation_states', [2])
-        if not isinstance(available_states, list):  # Handle case where oxidation_states isn't a list
+        if not isinstance(available_states, list):
             available_states = [2]
             print(f"⚠️ Warning: Invalid oxidation states format for {metal}. Using default [2]")
         
@@ -636,23 +669,8 @@ if __name__ == "__main__":
                 print(f"❌ {oxidation_state} is not a common oxidation state for {metal}. Try again.")
             except ValueError:
                 print("❌ Please enter a valid integer.")
-                
-    print("\nChoose geometry:")
-    print("1) Octahedral")
-    print("2) Tetrahedral")
-    print("3) Square planar")
-    geometry_input = input("Enter number [1-3]: ").strip()
-    geometry_map = {"1": "octahedral", "2": "tetrahedral", "3": "square_planar"}
-    geometry = geometry_map.get(geometry_input)
-    if not geometry:
-        print("❌ Invalid selection.")
-        exit()
-    try:
-        bond_length = float(input("Enter bond length (useful for bulky ligands) (default is 1): ").strip() or "1")
-    except ValueError:
-        print("❌ Invalid bond length. Using default 1.0.")
-        bond_length = 1.0
 
+    # --- MODIFIED GEOMETRY SELECTION LOGIC ---
     ligand_counts = {}
     print("➕ Enter ligand names and counts. Type 'done' to finish.")
     while True:
@@ -675,27 +693,46 @@ if __name__ == "__main__":
         print("⚠️ No ligands provided. Exiting.")
         exit()
 
+    # Calculate total donor sites
     total_sites = sum(len(get_donor_atom_indices(lig_map[n])) * c for n, c in ligand_counts.items())
-    expected_sites = len(GEOMETRY_POSITIONS[geometry])
-    print(f"\n🧮 Total donor sites: {total_sites}")
-    if total_sites != expected_sites:
-        print(f"⚠️ For {geometry} complexes, you need exactly {expected_sites} donor sites.")
-        confirm = input("Continue anyway? (y/N): ").strip().lower()
-        if confirm != 'y':
-            print("❌ Aborted.")
-            exit()
     
+    # Auto-determine geometry for common cases
+    geometry = None
+    if total_sites == 4:
+        metal_with_ox = f"{metal}+{oxidation_state}" if oxidation_state != 0 else metal
+        ligand_smiles_list = []
+        for name, count in ligand_counts.items():
+            lig = lig_map[name]
+            ligand_smiles_list.extend([Chem.MolToSmiles(lig)] * count)
+        
+        try:
+            geometry = predict_4coordinate_geometry(f"[{metal_with_ox}]", ligand_smiles_list)
+            print(f"🔍 Auto-detected geometry: {geometry} (based on metal/ligands)")
+        except Exception as e:
+            print(f"⚠️ Could not auto-determine geometry: {e}. Defaulting to tetrahedral.")
+            geometry = "tetrahedral"
+    elif total_sites == 6:
+        geometry = "octahedral"
+    else:
+        print(f"❌ Unsupported number of donor sites: {total_sites}. Only 4 or 6 supported.")
+        exit()
+
+
+   
     out_file = f"{metal}({oxidation_state})_{geometry}_{'_'.join(f'{k}{v}' for k, v in ligand_counts.items())}.png"
     try:
-        # Include oxidation state in the metal string
         metal_with_oxidation = f"{metal}+{oxidation_state}" if oxidation_state != 0 else metal
+        try:
+            bond_length = float(input("Enter metal-ligand bond length (e.g., 1.0): ").strip())
+        except ValueError:
+            bond_length = 1.0
         img = create_complex_from_ligand_dict(
             metal=metal_with_oxidation,
             ligand_counts=ligand_counts,
             geometry=geometry,
             carbon_angles=CARBON_ANGLE_SELECTION,
             output_file=out_file,
-            bond_length=bond_length
+            bond_length=bond_length 
         )
 
         print(f"✅ Complex image saved to {out_file}")

@@ -202,11 +202,13 @@ class CoordinationGUI(tk.Tk):
             
             bond_length = float(self.bond_length_var.get() or "1.0")
             img = create_complex_from_ligand_dict(metal, ligand_counts, geometry, bond_length=bond_length)
-            self.photo = ImageTk.PhotoImage(img)
+            resized_img = img.resize((400, 400), Image.Resampling.LANCZOS)
+            self.photo = ImageTk.PhotoImage(resized_img)
             self.canvas.update_idletasks()
             w, h = self.canvas.winfo_width(), self.canvas.winfo_height()
             self.canvas.delete("all")
             self.canvas.create_image(w/2, h/2, image=self.photo, anchor='center')
+
         except Exception as e:
             messagebox.showerror("Error", str(e))
 

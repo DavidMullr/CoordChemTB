@@ -62,8 +62,15 @@ def analyze_complex():
 
 
 def build_and_draw_complex():
+    import traceback
+
     print("\n🎨 Build Coordination Complex")
     metal = input("Enter metal symbol (e.g., Fe): ").strip()
+    try:
+        oxidation_state = int(input(f"Enter oxidation state for {metal} (default is 2): ").strip() or "2")
+    except ValueError:
+        oxidation_state = 2
+
     print("Choose geometry:")
     print("1) Octahedral")
     print("2) Tetrahedral")
@@ -71,34 +78,54 @@ def build_and_draw_complex():
     geometry_input = input("Enter number [1-3]: ").strip()
     geometry_map = {"1": "octahedral", "2": "tetrahedral", "3": "square_planar"}
     geometry = geometry_map.get(geometry_input)
+
     if not geometry:
         print("❌ Invalid geometry selection.")
         return
+
     try:
         bond_length = float(input("Enter bond length (useful for bulky ligands) (default is 1): ").strip() or "1")
     except ValueError:
         print("❌ Invalid bond length. Using default of 1.")
-        bond_length = 1
-
+        bond_length = 1.0
 
     print("Enter ligands and counts (type 'done' to finish):")
     ligand_counts = {}
+    lig_map = drawer.load_ligands_from_folder(drawer.LIGAND_FOLDER)
+
     while True:
-        name = input("Ligand name: ").strip()
+        name = input("Ligand name (or 'done' to finish): ").strip()
         if name.lower() == 'done':
             break
+
+        if name not in lig_map:
+            suggestion = info.find_closest_ligand(name, lig_map)
+            if suggestion:
+                print(f"✔ Using closest match: {suggestion}")
+                name = suggestion
+            else:
+                print("❌ Ligand not recognized and no close matches found.")
+                continue
+
         try:
             count = int(input(f"How many of '{name}'? "))
             ligand_counts[name] = count
         except ValueError:
             print("❌ Invalid count. Try again.")
 
+
+
+    if not ligand_counts:
+        print("❌ No ligands provided. Aborting.")
+        return
+
     try:
-        # Automatically name the output image
         output_filename = f"{metal}_{geometry}_{'_'.join(f'{k}{v}' for k, v in ligand_counts.items())}.png"
 
+        metal_with_charge = f"{metal}+{oxidation_state}" if oxidation_state != 0 else metal
+
         drawer.create_complex_from_ligand_dict(
-            metal=metal,
+            metal=metal_with_charge,
             ligand_counts=ligand_counts,
             geometry=geometry,
             carbon_angles=drawer.CARBON_ANGLE_SELECTION,
@@ -109,7 +136,9 @@ def build_and_draw_complex():
         print(f"✅ Image saved to {output_filename}")
 
     except Exception as e:
+        traceback.print_exc()
         print(f"❌ Failed to build complex: {e}")
+
 
 
 
@@ -139,7 +168,7 @@ def lookup_ligand_or_metal():
 
 def launch_gui():
     try:
-        from CoordChenTB.utils.interface2 import CoordinationGUI
+        from CoordChenTB.utils.interfacefinalversion import CoordinationGUI
         app = CoordinationGUI()
         app.mainloop()
     except Exception as e:
@@ -155,7 +184,7 @@ CoordChemTB CLI
 1) Analyze ligand field / spin state
 2) Build & draw coordination complex
 3) Lookup ligand/metal info
-4) Launch GUI [DOESN'T WORK PLEASE LAUNCH GUI DIRECTLY FROM INTERFACE2.py]
+4) TO LAUNCH GUI PLEASE launch interfacefinalversion.py directly
 5) Exit
 """)
         choice = input("→ Choose an option: ").strip()
