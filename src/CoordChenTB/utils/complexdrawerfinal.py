@@ -3,6 +3,7 @@ import io
 import math
 import importlib.machinery
 import pytest
+import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.Draw import rdMolDraw2D
@@ -210,17 +211,36 @@ def load_ligand(sdf_path):
     return orig
 
 # Identify donor atom indices
-def get_donor_atom_indices(lig):
-    donor_elems = {"N", "O", "S", "P", "Cl"}
-    # first, collect all atoms whose element is in donor_elems
-    candidate_idxs = [atom.GetIdx()
-                      for atom in lig.GetAtoms()
-                      if atom.GetSymbol() in donor_elems]
+# Define donor atom priority (higher priority first)
+DONOR_PRIORITY = ["O", "N", "S", "P", "Cl"]
 
-    # if the ligand has an explicit DENTATE property, use it
+def get_donor_atom_indices(lig):
+    # First check for explicit Denticity property (numeric)
+    if lig.HasProp("Denticity"):
+        try:
+            denticity = int(lig.GetProp("Denticity"))
+            if denticity <= 0:
+                raise ValueError(f"Invalid Denticity value {denticity} - must be positive")
+            
+            # Collect all candidate donor atoms with priority
+            candidate_atoms = [(atom.GetIdx(), atom.GetSymbol()) 
+                             for atom in lig.GetAtoms()
+                             if atom.GetSymbol() in DONOR_PRIORITY]
+            
+            if len(candidate_atoms) < denticity:
+                raise ValueError(f"Ligand claims denticity={denticity} but only {len(candidate_atoms)} donor-atoms found in priority set {DONOR_PRIORITY}")
+            
+            # Sort by priority (O first, then N, etc.)
+            candidate_atoms.sort(key=lambda x: DONOR_PRIORITY.index(x[1]))
+            
+            # Return exactly the first 'denticity' donor indices
+            return [idx for idx, sym in candidate_atoms[:denticity]]
+        except ValueError as e:
+            raise ValueError(f"Invalid Denticity property: {e}")
+
+    # Fallback to DENTATE property (textual or numeric)
     if lig.HasProp("DENTATE"):
         dent_str = lig.GetProp("DENTATE").strip().lower()
-        # map textual denticity to integer
         dent_map = {
             "monodentate": 1,
             "bidentate":   2,
@@ -229,7 +249,6 @@ def get_donor_atom_indices(lig):
             "pentadentate":5,
             "hexadentate": 6
         }
-        # allow numeric strings too, e.g. "2"
         if dent_str.isdigit():
             dent_val = int(dent_str)
         else:
@@ -237,14 +256,25 @@ def get_donor_atom_indices(lig):
                 dent_val = dent_map[dent_str]
             except KeyError:
                 raise ValueError(f"Unrecognized DENTATE value '{dent_str}' in ligand {lig.GetProp('LigandName') if lig.HasProp('LigandName') else ''}")
-        if len(candidate_idxs) < dent_val:
-            raise ValueError(f"Ligand claims denticity={dent_val} but only {len(candidate_idxs)} donor‐atoms found in element set {donor_elems}")
-        # return exactly the first dent_val donor indices
-        return candidate_idxs[:dent_val]
+        
+        # Collect all candidate donor atoms with priority
+        candidate_atoms = [(atom.GetIdx(), atom.GetSymbol())
+                         for atom in lig.GetAtoms()
+                         if atom.GetSymbol() in DONOR_PRIORITY]
+        if len(candidate_atoms) < dent_val:
+            raise ValueError(f"Ligand claims denticity={dent_val} but only {len(candidate_atoms)} donor-atoms found in priority set {DONOR_PRIORITY}")
+        
+        # Sort by priority (O first, then N, etc.)
+        candidate_atoms.sort(key=lambda x: DONOR_PRIORITY.index(x[1]))
+        
+        return [idx for idx, sym in candidate_atoms[:dent_val]]
 
-    # otherwise fall back to the old behaviour
-    return candidate_idxs
-
+    # Final fallback - return all candidate donor atoms sorted by priority
+    candidate_atoms = [(atom.GetIdx(), atom.GetSymbol())
+                      for atom in lig.GetAtoms()
+                      if atom.GetSymbol() in DONOR_PRIORITY]
+    candidate_atoms.sort(key=lambda x: DONOR_PRIORITY.index(x[1]))
+    return [idx for idx, sym in candidate_atoms]
 # Compute explicit carbon positioning around a donor atom
 def compute_carbon_position(donor_pos, angle_deg, distance=1.5):
     angle_rad = math.radians(angle_deg)
@@ -254,6 +284,8 @@ def compute_carbon_position(donor_pos, angle_deg, distance=1.5):
 
 # Build coordination complex with optional custom carbon angles per octahedral site
 # carbon_angles: dict mapping octahedral position index (0-5) -> list of angles in degrees
+
+
 def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral', carbon_angles=None, chain_delta_angle=60.0, chain_delta_r=0.5):
     from rdkit.Chem import rdMolTransforms
 
@@ -320,8 +352,47 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
         for i in range(lig.GetNumAtoms()):
             pos = conf.GetAtomPosition(i)
             conf.SetAtomPosition(i, Point3D(pos.x + target_pos.x, pos.y + target_pos.y, 0.0))
-
+        
         return lig
+    def place_ligand_conditional_flip(ligand, donor_idx, metal_pos):
+        """Flip ligand ONLY if its first heavy neighbor points toward the metal."""
+        # 1) Get donor and metal positions
+        conf = ligand.GetConformer()
+        donor_pos = conf.GetAtomPosition(donor_idx)
+        dx, dy = metal_pos.x - donor_pos.x, metal_pos.y - donor_pos.y
+        base_angle = math.atan2(dy, dx)  # Angle from donor to metal
+
+        # 2) Place ligand initially
+        lig_placed = translate_rotate_ligand(ligand, donor_idx, metal_pos, base_angle)
+        conf = lig_placed.GetConformer()
+
+        # 3) Find the first heavy neighbor (not H, not metal)
+        donor_atom = lig_placed.GetAtomWithIdx(donor_idx)
+        neighbor_idx = None
+        for nbr in donor_atom.GetNeighbors():
+            if nbr.GetAtomicNum() > 1:  # Exclude hydrogens
+                neighbor_idx = nbr.GetIdx()
+                break
+
+        if neighbor_idx is None:
+            return lig_placed  # No heavy neighbor (e.g., H-only ligand), skip flip check
+
+        # 4) Compare vectors:
+        #    v1 = donor -> neighbor (ligand direction)
+        #    v2 = donor -> metal
+        neighbor_pos = conf.GetAtomPosition(neighbor_idx)
+        v_lig = (neighbor_pos.x - donor_pos.x, neighbor_pos.y - donor_pos.y)
+        v_met = (metal_pos.x - donor_pos.x, metal_pos.y - donor_pos.y)
+
+        # 5) Flip ONLY if the angle between v_lig and v_met is < 90°
+        dot = v_lig[0] * v_met[0] + v_lig[1] * v_met[1]  # Dot product
+        if dot > 30:  # cos(θ) > 0 → θ < 90° → pointing toward metal
+            lig_placed = translate_rotate_ligand(
+                ligand, donor_idx, metal_pos, base_angle + math.pi
+            )
+
+        return lig_placed
+    
 
     if geometry not in GEOMETRY_POSITIONS:
         raise ValueError(f"Unsupported geometry '{geometry}'. Choose from {list(GEOMETRY_POSITIONS)}.")
@@ -362,6 +433,7 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
                 raise ValueError("Too many bidentate ligands for this geometry")
             p0, p1 = pair_positions[bidentate_count]
             lig = transform_ligand_rigid(lig, donors[0], donors[1], positions[p0], positions[p1])
+            #lig = place_ligand_conditional_flip(lig, donors[0], positions[p0])
             site_assignments = [p0, p1]
             used_positions.update(site_assignments)
             bidentate_count += 1
@@ -396,7 +468,7 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
         used_positions.add(site)
         angle = math.atan2(positions[site].y, positions[site].x)
         lig = translate_rotate_ligand(lig, donors[0], positions[site], angle)
-
+        lig = place_ligand_conditional_flip(lig, donors[0], positions[site])
         combo = Chem.CombineMols(metal.GetMol(), lig)
         rw = Chem.RWMol(combo)
         offset = metal.GetNumAtoms()
@@ -430,7 +502,7 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
                 bond.SetBondDir(rdchem.BondDir.BEGINWEDGE)
             elif site_idx in (2, 3):
                 bond.SetBondDir(rdchem.BondDir.BEGINDASH)
-
+    
     return mol
 
 
@@ -473,7 +545,7 @@ def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral',
         ligs.extend([lig_map[n]] * c)
 
     mol = build_coordination_complex(
-        metal_smiles=f"[{metal}+2]",
+        metal_smiles=f"[{metal}]",  # Oxidation state is now included in the metal string
         ligand_mols=ligs,
         geometry=geometry,
         carbon_angles=carbon_angles,
@@ -488,6 +560,7 @@ def create_complex_from_ligand_dict(metal, ligand_counts, geometry='octahedral',
         im.show()
 
     return img
+
 
 # --- Angle selection ---
 # Define your custom angles here, keyed by site index (0-5). Remove entries to use DEFAULT_CARBON_ANGLES.
@@ -524,11 +597,49 @@ if __name__ == "__main__":
     lig_map = load_ligands_from_folder(LIGAND_FOLDER)
     print(f"✅ Found {len(lig_map)} ligands:", ", ".join(sorted(lig_map.keys())))
 
-    metal = input("Enter metal symbol (e.g., Fe): ").strip()
+    metal = input("Enter metal symbol (e.g., Fe): ").strip().capitalize()
+    
+    # Find metal in METALS list with error handling
+    metal_info = None
+    try:
+        for m in METALS:
+            # Handle case where m might not be a dictionary or lacks 'symbol' key
+            if isinstance(m, dict) and 'symbol' in m:
+                if m['symbol'].upper() == metal.upper():
+                    metal_info = m
+                    break
+    except Exception as e:
+        print(f"⚠️ Error accessing metals database: {e}")
 
-    geometry = input("Enter geometry (octahedral/tetrahedral/square_planar): ").strip().lower()
-    if geometry not in GEOMETRY_POSITIONS:
-        print("❌ Unsupported geometry.")
+    if not metal_info:
+        print(f"⚠️ Warning: Metal {metal} not found in database. Using default +2")
+        oxidation_state = 2
+    else:
+        # Safely get oxidation states with default [2] if not specified
+        available_states = metal_info.get('oxidation_states', [2])
+        if not isinstance(available_states, list):  # Handle case where oxidation_states isn't a list
+            available_states = [2]
+            print(f"⚠️ Warning: Invalid oxidation states format for {metal}. Using default [2]")
+        
+        print(f"Available oxidation states for {metal}: {', '.join(map(str, available_states))}")
+        while True:
+            try:
+                oxidation_state = int(input(f"Enter oxidation state for {metal}: ").strip())
+                if oxidation_state in available_states:
+                    break
+                print(f"❌ {oxidation_state} is not a common oxidation state for {metal}. Try again.")
+            except ValueError:
+                print("❌ Please enter a valid integer.")
+                
+    print("\nChoose geometry:")
+    print("1) Octahedral")
+    print("2) Tetrahedral")
+    print("3) Square planar")
+    geometry_input = input("Enter number [1-3]: ").strip()
+    geometry_map = {"1": "octahedral", "2": "tetrahedral", "3": "square_planar"}
+    geometry = geometry_map.get(geometry_input)
+    if not geometry:
+        print("❌ Invalid selection.")
         exit()
 
     ligand_counts = {}
@@ -562,11 +673,13 @@ if __name__ == "__main__":
         if confirm != 'y':
             print("❌ Aborted.")
             exit()
-
-    out_file = f"{metal}_{geometry}_{'_'.join(f'{k}{v}' for k, v in ligand_counts.items())}.png"
+    
+    out_file = f"{metal}({oxidation_state})_{geometry}_{'_'.join(f'{k}{v}' for k, v in ligand_counts.items())}.png"
     try:
+        # Include oxidation state in the metal string
+        metal_with_oxidation = f"{metal}+{oxidation_state}" if oxidation_state != 0 else metal
         img = create_complex_from_ligand_dict(
-            metal=metal,
+            metal=metal_with_oxidation,  # Now includes oxidation state
             ligand_counts=ligand_counts,
             geometry=geometry,
             carbon_angles=CARBON_ANGLE_SELECTION,
@@ -576,4 +689,3 @@ if __name__ == "__main__":
         img.show()
     except Exception as e:
         print(f"❌ Failed to create complex: {e}")
-
