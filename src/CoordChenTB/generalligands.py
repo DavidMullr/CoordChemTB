@@ -215,8 +215,8 @@ ligands = {
     "MeOH": ("CO", "moderate", 20000, "O"),
     "Acetate": ("CC(=O)[O-]", "moderate", 20000, "O,O"),
     "Formate": ("C(=O)[O-]", "moderate", 20000, "O"),
-    "Pyrrolidine": ("C1CCNC1", "strong", 25000, "N"),
-    "Aniline": ("c1ccccc1N", "moderate", 21000, "N"),
+    "Pyrrolidine": ("C1CC[NH]C1", "strong", 25000, "N"),
+    "Aniline": ("c1ccccc1[NH2]", "moderate", 21000, "N"),
     "Imidazole": ("c1cnc[nH]1", "moderate-strong", 24000, "N")
 }
 

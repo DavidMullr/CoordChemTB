@@ -35,7 +35,7 @@ M  END
 Pyrrolidine
 
 >  <SMILES>  (1) 
-C1CCNC1
+C1CC[NH]C1
 
 >  <FieldStrength>  (1) 
 strong

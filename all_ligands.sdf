@@ -299,7 +299,7 @@ M  END
 Aniline
 
 >  <SMILES>  (6) 
-c1ccccc1N
+c1ccccc1[NH2]
 
 >  <FieldStrength>  (6) 
 moderate
@@ -3801,7 +3801,7 @@ M  END
 Pyrrolidine
 
 >  <SMILES>  (72) 
-C1CCNC1
+C1CC[NH]C1
 
 >  <FieldStrength>  (72) 
 strong
