@@ -12,6 +12,8 @@ class CoordinationGUI(tk.Tk):
         self.geometry("1000x600")
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill='both', expand=True)
+        self.sdf_file_list = []
+        self.ligand_names = []
         self.init_complex_tab()
         self.init_orbital_tab()
 
@@ -50,38 +52,58 @@ class CoordinationGUI(tk.Tk):
 
         self.sdf_file_var = tk.StringVar()
         self.metal_orb_var = tk.StringVar()
-        self.charge_var = tk.StringVar()
-        self.lig_list_var = tk.StringVar()
+        self.oxstate_var = tk.StringVar()
+        self.selected_ligand = tk.StringVar()
         self.geom_orb_var = tk.StringVar()
+        self.lig_list_accum = []
 
-        ttk.Label(frame, text="Ligand Data SDF:").grid(row=0, column=0, sticky='w', padx=5, pady=5)
+        ttk.Label(frame, text="Ligand Data SDFs:").grid(row=0, column=0, sticky='w', padx=5, pady=5)
         ttk.Entry(frame, textvariable=self.sdf_file_var, width=50).grid(row=0, column=1, padx=5)
         ttk.Button(frame, text="Browse", command=self.browse_sdf_file).grid(row=0, column=2, padx=5)
 
         ttk.Label(frame, text="Metal:").grid(row=1, column=0, sticky='w', padx=5, pady=5)
         ttk.Entry(frame, textvariable=self.metal_orb_var).grid(row=1, column=1, padx=5)
 
-        ttk.Label(frame, text="Total Complex Charge:").grid(row=2, column=0, sticky='w', padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.charge_var).grid(row=2, column=1, padx=5)
+        ttk.Label(frame, text="Oxidation State of Metal:").grid(row=2, column=0, sticky='w', padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.oxstate_var).grid(row=2, column=1, padx=5)
 
-        ttk.Label(frame, text="Ligands (comma-separated):").grid(row=3, column=0, columnspan=2, sticky='w', padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.lig_list_var, width=60).grid(row=4, column=0, columnspan=3, padx=5)
+        ttk.Label(frame, text="Select Ligand:").grid(row=3, column=0, sticky='w', padx=5, pady=5)
+        self.ligand_dropdown = ttk.Combobox(frame, textvariable=self.selected_ligand, values=[], state="readonly")
+        self.ligand_dropdown.grid(row=3, column=1, padx=5)
+        ttk.Button(frame, text="Add Ligand", command=self.add_ligand).grid(row=3, column=2, padx=5)
 
-        ttk.Label(frame, text="Geometry:").grid(row=5, column=0, sticky='w', padx=5, pady=5)
+        ttk.Label(frame, text="Ligands Selected:").grid(row=4, column=0, sticky='w', padx=5)
+        self.lig_list_display = tk.StringVar()
+        ttk.Entry(frame, textvariable=self.lig_list_display, state="readonly", width=60).grid(row=5, column=0, columnspan=3, padx=5)
+
+        ttk.Label(frame, text="Geometry:").grid(row=6, column=0, sticky='w', padx=5, pady=5)
         ttk.Combobox(
             frame,
             textvariable=self.geom_orb_var,
             values=["octahedral", "tetrahedral", "square planar"],
             state="readonly"
-        ).grid(row=5, column=1, padx=5)
+        ).grid(row=6, column=1, padx=5)
 
-        ttk.Button(frame, text="Compute Orbital Splitting", command=self.compute_orbital).grid(row=6, column=0, columnspan=3, pady=10)
-        ttk.Button(frame, text="Manual d-Electron Tool", command=self.open_manual_visualizer).grid(row=7, column=0, columnspan=3, pady=5)
+        ttk.Button(frame, text="Compute Orbital Splitting", command=self.compute_orbital).grid(row=7, column=0, columnspan=3, pady=10)
 
     def browse_sdf_file(self):
-        path = filedialog.askopenfilename(title="Select all_ligands.sdf", filetypes=[("SDF Files", "*.sdf")])
-        if path:
-            self.sdf_file_var.set(path)
+        import os
+        paths = filedialog.askopenfilenames(title="Select Ligand SDF Files", filetypes=[("SDF Files", "*.sdf")])
+        if paths:
+            self.sdf_file_list = list(paths)
+            self.sdf_file_var.set("; ".join(paths))
+            ligand_set = set()
+            for path in paths:
+                d = orbital.load_ligand_data(path)
+                if d:
+                    ligand_set.update(d.keys())
+            self.ligand_dropdown['values'] = sorted(ligand_set)
+
+    def add_ligand(self):
+        ligand = self.selected_ligand.get()
+        if ligand and ligand not in self.lig_list_accum:
+            self.lig_list_accum.append(ligand)
+            self.lig_list_display.set(", ".join(self.lig_list_accum))
 
     def draw_complex(self):
         try:
@@ -103,70 +125,50 @@ class CoordinationGUI(tk.Tk):
 
     def compute_orbital(self):
         try:
-            sdf = self.sdf_file_var.get()
+            import io, sys
+
             metal_sym = self.metal_orb_var.get()
-            total_charge = int(self.charge_var.get())
-            lig_names = [l.strip() for l in self.lig_list_var.get().split(',') if l.strip()]
+            ox_state = int(self.oxstate_var.get())
+            lig_names = self.lig_list_accum
             geom = self.geom_orb_var.get()
-            data = orbital.load_ligand_data(sdf)
+
+            data = {}
+            for path in self.sdf_file_list:
+                d = orbital.load_ligand_data(path)
+                if d:
+                    data.update(d)
+
             metal = orbital.get_metal_data(metal_sym)
             deltas, charges = [], []
             for name in lig_names:
                 info = data.get(name) or data.get(orbital.find_closest_ligand(name, data)) or {"Delta": 20000, "Charge": 0}
                 deltas.append(info["Delta"])
                 charges.append(info["Charge"])
-            ligand_charge = sum(charges)
-            ox_state = total_charge - ligand_charge
+
             d_elec = orbital.get_d_electron_count(metal["atomic_number"], ox_state)
             avg_delta = sum(deltas) / len(deltas)
             spin = orbital.predict_spin_state(avg_delta, orbital.get_pairing_energy(metal["block"]))
+
+            # Capture CFSE output
+            buf = io.StringIO()
+            old_stdout = sys.stdout
+            sys.stdout = buf
             orbital.plot_cf(d_elec, avg_delta, spin, geom, metal["block"], label=f"{metal_sym} {spin}")
+            sys.stdout = old_stdout
+            output = buf.getvalue()
+            lines = output.splitlines()
+
+            pre = next((ln for ln in lines if "📉 CFSE" in ln and "Total" not in ln and "pairing" not in ln), None)
+            pen = next((ln for ln in lines if "pairing penalty" in ln), None)
+            tot = next((ln for ln in lines if "Total CFSE" in ln), None)
+
+            msg = "\n".join(filter(None, [pre, pen, tot]))
+            if msg:
+                messagebox.showinfo("CFSE Energies", msg)
+            else:
+                messagebox.showinfo("CFSE Energies", "No energy details found.")
         except Exception as e:
-            messagebox.showerror("Error", str(e))
-
-    def open_manual_visualizer(self):
-        ManualFieldVisualizer(self)
-
-class ManualFieldVisualizer(tk.Toplevel):
-    def __init__(self, master=None):
-        super().__init__(master)
-        self.title("Manual d-Electron Field Visualization")
-        self.geometry("400x300")
-
-        self.geom_var = tk.StringVar(value="octahedral")
-        self.delec_var = tk.StringVar(value="6")
-        self.delta_var = tk.StringVar(value="20000")
-        self.spin_var = tk.StringVar(value="High-spin")
-        self.block_var = tk.StringVar(value="3d")
-
-        ttk.Label(self, text="Geometry:").grid(row=0, column=0, sticky="w", padx=10, pady=5)
-        ttk.Combobox(self, textvariable=self.geom_var, values=["octahedral", "tetrahedral", "square planar"], state="readonly").grid(row=0, column=1, padx=10, pady=5)
-
-        ttk.Label(self, text="d-Electron Count:").grid(row=1, column=0, sticky="w", padx=10, pady=5)
-        ttk.Entry(self, textvariable=self.delec_var).grid(row=1, column=1, padx=10, pady=5)
-
-        ttk.Label(self, text="Δ (cm⁻¹):").grid(row=2, column=0, sticky="w", padx=10, pady=5)
-        ttk.Entry(self, textvariable=self.delta_var).grid(row=2, column=1, padx=10, pady=5)
-
-        ttk.Label(self, text="Spin State:").grid(row=3, column=0, sticky="w", padx=10, pady=5)
-        ttk.Combobox(self, textvariable=self.spin_var, values=["High-spin", "Low-spin"], state="readonly").grid(row=3, column=1, padx=10, pady=5)
-
-        ttk.Label(self, text="Block:").grid(row=4, column=0, sticky="w", padx=10, pady=5)
-        ttk.Combobox(self, textvariable=self.block_var, values=["3d", "4d", "5d", "f"], state="readonly").grid(row=4, column=1, padx=10, pady=5)
-
-        ttk.Button(self, text="Plot", command=self.plot_diagram).grid(row=5, column=0, columnspan=2, pady=15)
-
-    def plot_diagram(self):
-        try:
-            orbital.plot_cf(
-                d_elec=int(self.delec_var.get()),
-                delta=float(self.delta_var.get()),
-                spin=self.spin_var.get(),
-                geom=self.geom_var.get(),
-                geom_block=self.block_var.get(),
-                label=f"{self.spin_var.get()} {self.geom_var.get()}"
-            )
-        except Exception as e:
+            sys.stdout = old_stdout
             messagebox.showerror("Error", str(e))
 
 if __name__ == "__main__":
