@@ -4,6 +4,8 @@ from PIL import Image, ImageTk
 from complexdrawerfinal import create_complex_from_ligand_dict
 import complexorbitalssplitting as orbital
 from metals_db import METALS
+import sys
+import io
 
 class CoordinationGUI(tk.Tk):
     def __init__(self):
@@ -32,15 +34,9 @@ class CoordinationGUI(tk.Tk):
 
         ttk.Label(frame, text="Geometry:").grid(row=3, column=0, sticky='w', padx=5, pady=5)
         self.geom_var = tk.StringVar()
-        ttk.Combobox(
-            frame,
-            textvariable=self.geom_var,
-            values=["octahedral", "tetrahedral", "square planar"],
-            state="readonly"
-        ).grid(row=3, column=1, padx=5, pady=5)
+        ttk.Combobox(frame, textvariable=self.geom_var, values=["octahedral", "tetrahedral", "square planar"], state="readonly").grid(row=3, column=1, padx=5, pady=5)
 
         ttk.Button(frame, text="Draw Complex", command=self.draw_complex).grid(row=4, column=0, columnspan=2, pady=10)
-
         self.canvas = tk.Canvas(frame, bg='white')
         self.canvas.grid(row=5, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
         frame.rowconfigure(5, weight=1)
@@ -77,17 +73,12 @@ class CoordinationGUI(tk.Tk):
         ttk.Entry(frame, textvariable=self.lig_list_display, state="readonly", width=60).grid(row=5, column=0, columnspan=3, padx=5)
 
         ttk.Label(frame, text="Geometry:").grid(row=6, column=0, sticky='w', padx=5, pady=5)
-        ttk.Combobox(
-            frame,
-            textvariable=self.geom_orb_var,
-            values=["octahedral", "tetrahedral", "square planar"],
-            state="readonly"
-        ).grid(row=6, column=1, padx=5)
+        ttk.Combobox(frame, textvariable=self.geom_orb_var, values=["octahedral", "tetrahedral", "square planar"], state="readonly").grid(row=6, column=1, padx=5)
 
         ttk.Button(frame, text="Compute Orbital Splitting", command=self.compute_orbital).grid(row=7, column=0, columnspan=3, pady=10)
+        ttk.Button(frame, text="Manual d-Electron Tool", command=self.open_manual_visualizer).grid(row=8, column=0, columnspan=3, pady=5)
 
     def browse_sdf_file(self):
-        import os
         paths = filedialog.askopenfilenames(title="Select Ligand SDF Files", filetypes=[("SDF Files", "*.sdf")])
         if paths:
             self.sdf_file_list = list(paths)
@@ -125,8 +116,6 @@ class CoordinationGUI(tk.Tk):
 
     def compute_orbital(self):
         try:
-            import io, sys
-
             metal_sym = self.metal_orb_var.get()
             ox_state = int(self.oxstate_var.get())
             lig_names = self.lig_list_accum
@@ -149,14 +138,12 @@ class CoordinationGUI(tk.Tk):
             avg_delta = sum(deltas) / len(deltas)
             spin = orbital.predict_spin_state(avg_delta, orbital.get_pairing_energy(metal["block"]))
 
-            # Capture CFSE output
             buf = io.StringIO()
             old_stdout = sys.stdout
             sys.stdout = buf
             orbital.plot_cf(d_elec, avg_delta, spin, geom, metal["block"], label=f"{metal_sym} {spin}")
             sys.stdout = old_stdout
-            output = buf.getvalue()
-            lines = output.splitlines()
+            lines = buf.getvalue().splitlines()
 
             pre = next((ln for ln in lines if "📉 CFSE" in ln and "Total" not in ln and "pairing" not in ln), None)
             pen = next((ln for ln in lines if "pairing penalty" in ln), None)
@@ -169,6 +156,51 @@ class CoordinationGUI(tk.Tk):
                 messagebox.showinfo("CFSE Energies", "No energy details found.")
         except Exception as e:
             sys.stdout = old_stdout
+            messagebox.showerror("Error", str(e))
+
+    def open_manual_visualizer(self):
+        ManualFieldVisualizer(self)
+
+class ManualFieldVisualizer(tk.Toplevel):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.title("Manual d-Electron Field Visualization")
+        self.geometry("400x300")
+
+        self.geom_var = tk.StringVar(value="octahedral")
+        self.delec_var = tk.StringVar(value="6")
+        self.delta_var = tk.StringVar(value="20000")
+        self.spin_var = tk.StringVar(value="High-spin")
+        self.block_var = tk.StringVar(value="3d")
+
+        ttk.Label(self, text="Geometry:").grid(row=0, column=0, sticky="w", padx=10, pady=5)
+        ttk.Combobox(self, textvariable=self.geom_var, values=["octahedral", "tetrahedral", "square planar"], state="readonly").grid(row=0, column=1, padx=10, pady=5)
+
+        ttk.Label(self, text="d-Electron Count:").grid(row=1, column=0, sticky="w", padx=10, pady=5)
+        ttk.Entry(self, textvariable=self.delec_var).grid(row=1, column=1, padx=10, pady=5)
+
+        ttk.Label(self, text="Δ (cm⁻¹):").grid(row=2, column=0, sticky="w", padx=10, pady=5)
+        ttk.Entry(self, textvariable=self.delta_var).grid(row=2, column=1, padx=10, pady=5)
+
+        ttk.Label(self, text="Spin State:").grid(row=3, column=0, sticky="w", padx=10, pady=5)
+        ttk.Combobox(self, textvariable=self.spin_var, values=["High-spin", "Low-spin"], state="readonly").grid(row=3, column=1, padx=10, pady=5)
+
+        ttk.Label(self, text="Block:").grid(row=4, column=0, sticky="w", padx=10, pady=5)
+        ttk.Combobox(self, textvariable=self.block_var, values=["3d", "4d", "5d", "f"], state="readonly").grid(row=4, column=1, padx=10, pady=5)
+
+        ttk.Button(self, text="Plot", command=self.plot_diagram).grid(row=5, column=0, columnspan=2, pady=15)
+
+    def plot_diagram(self):
+        try:
+            orbital.plot_cf(
+                d_elec=int(self.delec_var.get()),
+                delta=float(self.delta_var.get()),
+                spin=self.spin_var.get(),
+                geom=self.geom_var.get(),
+                geom_block=self.block_var.get(),
+                label=f"{self.spin_var.get()} {self.geom_var.get()}"
+            )
+        except Exception as e:
             messagebox.showerror("Error", str(e))
 
 if __name__ == "__main__":
