@@ -191,7 +191,7 @@ ligands = {
     "DMF": ("CN(C)C=O", "moderate-strong", 22000, "O"),
     "DMSO": ("CS(=O)C", "moderate", 21000, "S"),
     "bipy": ("c1ccnc(c1)c2ccccn2", "strong", 26000, "N,N"),
-    "phen": ("c1ccc2c(c1)ccnc2c3cccnc3", "strong", 27000, "N,N"),
+    "phen": ("c1cc2ccc3cccnc3c2nc1", "strong", 27000, "N,N"),
     "NO₂⁻": ("[O-][N+](=O)", "strong", 27000, "N"),
     "PPh₃": ("P(c1ccccc1)(c2ccccc2)(c3ccccc3)", "strong", 28000, "P"),
     "CN⁻": ("[C-]#N", "very strong", 30000, "C"),

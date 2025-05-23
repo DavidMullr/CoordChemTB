@@ -1,11 +1,9 @@
 import pytest
 import sys
 import os
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-
-from CoordChenTB.utils.complexorbitalssplitting import get_d_electron_count, get_pairing_energy
 from CoordChenTB.utils.metals_db import METALS
+from CoordChenTB.utils.complexorbitalssplitting import get_d_electron_count, get_pairing_energy
 
 def test_get_d_electron_count():
     assert get_d_electron_count(26, 2) == 6
