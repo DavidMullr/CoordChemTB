@@ -1,8 +1,4 @@
-"""
-CoordChemTB Core Controller
-A CLI for generating ligands, building coordination complexes,
-and analyzing ligand field properties.
-"""
+
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -10,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from CoordChenTB.utils import complexdrawerfinal as drawer
 from CoordChenTB.utils import complexorbitalssplitting as orbital
 from CoordChenTB.utils import metalandligandsinfo as info
-# Not importing generalligands yet since it runs automatically on import in current version
+
 
 METALS = [
     {'symbol': 'Sc',  'atomic_number': 21,  'block': '3d', 'smiles': '[Sc]',  'atomic_weight': 44.956,  'oxidation_states': [3]},
@@ -164,15 +160,14 @@ def lookup_ligand_or_metal():
             else:
                 print("❌ Name not recognized as ligand or metal.")
 
-####DOESN'T WORK PLEASE LAUNCH DIRECLY FRON INTERFACE2.py
+
+import subprocess
+import os
 
 def launch_gui():
-    try:
-        from CoordChenTB.utils.interfacefinalversion import CoordinationGUI
-        app = CoordinationGUI()
-        app.mainloop()
-    except Exception as e:
-        print(f"❌ Failed to launch GUI: {e}")
+    gui_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'utils', 'interfacefinalversion.py'))
+    subprocess.run(["python", gui_path])
+
 
 
 
@@ -184,7 +179,7 @@ CoordChemTB CLI
 1) Analyze ligand field / spin state
 2) Build & draw coordination complex
 3) Lookup ligand/metal info
-4) TO LAUNCH GUI PLEASE launch interfacefinalversion.py directly
+4) Launch GUI
 5) Exit
 """)
         choice = input("→ Choose an option: ").strip()

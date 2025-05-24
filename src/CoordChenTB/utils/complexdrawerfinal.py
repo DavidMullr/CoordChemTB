@@ -20,7 +20,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from CoordChenTB.utils.metals_db import METALS
 
-# Define 2D donor positions for each geometry
+# Defining 2D donor positions for each geometry
 GEOMETRY_POSITIONS = {
     'octahedral': [
         Point2D(0.0, 3.0),
@@ -50,7 +50,7 @@ DEFAULT_CARBON_ANGLES_BY_GEOMETRY = {
     'square_planar': [90, 270],
 }
 
-bond_length = 1 #To later on change bond length
+bond_length = 1 #To later-on change bond length
 
 # Default angles for explicit carbon placement around each donor atom
 DEFAULT_CARBON_ANGLES = [120, 240]
@@ -78,13 +78,13 @@ def validate_carbon_angles(angles_dict):
         for angle in angles:
             # Find the closest allowed angle
             closest = min(ALLOWED_ANGLES, key=lambda x: abs(x - angle))
-            if abs(closest - angle) > 15:  # If more than 15 degrees off, it's probably a mistake
+            if abs(closest - angle) > 15:  
                 raise ValueError(f"Angle {angle}° for site {site} is too far from allowed values {ALLOWED_ANGLES}")
             validated_angles.append(closest)
         validated[site] = validated_angles
     return validated
 
-#Load a ligand from SDF, but build from its SMILES if available
+
 def load_ligand(sdf_path):
     suppl = Chem.SDMolSupplier(sdf_path)
     orig = next((m for m in suppl if m), None)
@@ -201,7 +201,7 @@ def get_donor_atom_indices(lig):
         
         return [idx for idx, sym in candidate_atoms[:dent_val]]
 
-    # Final fallback - return all candidate donor atoms sorted by priority
+    # Final fallback - returning all candidate donor atoms sorted by priority
     candidate_atoms = [(atom.GetIdx(), atom.GetSymbol())
                       for atom in lig.GetAtoms()
                       if atom.GetSymbol() in DONOR_PRIORITY]
@@ -253,6 +253,8 @@ def build_coordination_complex(metal_smiles, ligand_mols, geometry='octahedral',
             conf.SetAtomPosition(i, Point3D(xr, yr, 0.0))
 
         return lig
+
+#Done because some cycles werem't oriented properly
 
     def translate_rotate_ligand(lig, donor_idx, target_pos, direction_angle):
         lig = Chem.Mol(lig)
@@ -474,7 +476,7 @@ def draw_mol_2D(mol, img_size=(2000,2000), output_path=None, ligand_mols=None, m
     
     # Increased bracket parameters for more space
     bracket_padding = 55  # Increased from 15 (space between molecule and brackets)
-    bracket_thickness = 3  # Line width
+    bracket_thickness = 8  # Line width
     bracket_extension = 20  # Increased from 20 (length of horizontal lines)
     
     # Left bracket ([)

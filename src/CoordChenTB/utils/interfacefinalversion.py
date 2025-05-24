@@ -1,7 +1,14 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
-from complexdrawerfinal import create_complex_from_ligand_dict, load_ligands_from_folder, LIGAND_FOLDER
+from complexdrawerfinal import (
+    create_complex_from_ligand_dict,
+    load_ligands_from_folder,
+    LIGAND_FOLDER,
+    get_donor_atom_indices,
+    predict_4coordinate_geometry
+)
+from rdkit.Chem import MolToSmiles
 import complexorbitalssplitting as orbital
 from metals_db import METALS
 
@@ -14,21 +21,18 @@ class CoordinationGUI(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Coordination Chemistry Toolkit")
-        self.geometry("1000x600")
-        self.configure(bg='#2e2e2e')  # Set dark background
-        title_label = ttk.Label(self, text="CoordChemTB", font=("Helvetica", 28, "bold"))
-        title_label.pack(pady=15)
 
-        # Global dark theme styling
         style = ttk.Style(self)
         style.theme_use('clam')
-        style.configure('.', background='#2e2e2e', foreground='white', fieldbackground='#3a3a3a')
-        style.configure('TLabel', background='#2e2e2e', foreground='white', anchor='center')
-        style.configure('TEntry', fieldbackground='#3a3a3a', foreground='white', justify='center')
-        style.configure('TCombobox', fieldbackground='#3a3a3a', foreground='white', justify='center')
-        style.map('TCombobox',
-                fieldbackground=[('readonly', '#3a3a3a')],
-                foreground=[('readonly', 'white')])
+        style.configure('TNotebook.Tab', background='#444', foreground='white')
+        style.map(
+            'TNotebook.Tab',
+            background=[('selected', '#666')],
+            foreground=[('selected', 'white')]
+        )
+        style.configure('TLabel', background='#333', foreground='white')
+        style.configure('TFrame', background='#333')
+        style.configure('TEntry', fieldbackground='#555', foreground='white')
         style.configure('TButton', background='#444', foreground='white')
 
         self.notebook = ttk.Notebook(self)
@@ -37,90 +41,136 @@ class CoordinationGUI(tk.Tk):
         self.sdf_file_list = []
         self.lig_map = load_ligands_from_folder(LIGAND_FOLDER)
         self.ligand_names = sorted(self.lig_map.keys())
+        self.metal_symbols = [m['symbol'] for m in METALS]
+        self.lookup_values = self.ligand_names + self.metal_symbols
 
         self.init_complex_tab()
         self.init_orbital_tab()
         self.init_info_tab()
 
-
     def init_complex_tab(self):
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text="Complex Builder")
 
-        # Configure columns to expand for centering
         for i in range(2):
             frame.columnconfigure(i, weight=1)
 
-        ttk.Label(frame, text="Metal:").grid(row=0, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
+        # Metal selection row
+        ttk.Label(frame, text="Metal:").grid(row=0, column=0, sticky='ew', padx=5, pady=5)
         metals = [m['symbol'] for m in METALS]
         self.metal_var = tk.StringVar()
-        ttk.Combobox(frame, textvariable=self.metal_var, values=metals, state="readonly").grid(row=1, column=0, columnspan=2, sticky='ew', padx=5)
+        metal_cb = ttk.Combobox(frame, textvariable=self.metal_var, values=metals, state="readonly")
+        metal_cb.grid(row=1, column=0, sticky='ew', padx=5)
+        
+        # Oxidation state selection
+        ttk.Label(frame, text="Oxidation State:").grid(row=0, column=1, sticky='ew', padx=5, pady=5)
+        self.oxstate_var = tk.StringVar()
+        self.oxstate_cb = ttk.Combobox(frame, textvariable=self.oxstate_var, state="readonly")
+        self.oxstate_cb.grid(row=1, column=1, sticky='ew', padx=5)
+        
+        # Update oxidation states when metal changes
+        def update_oxidation_states(*args):
+            metal = self.metal_var.get()
+            if metal:
+                metal_info = next((m for m in METALS if m['symbol'] == metal), None)
+                if metal_info:
+                    states = metal_info.get('oxidation_states', [2])
+                    self.oxstate_cb['values'] = states
+                    if states:
+                        self.oxstate_var.set(str(states[0]))
+        self.metal_var.trace_add('write', update_oxidation_states)
 
-        ttk.Label(frame, text="Ligands (Name:Count, e.g. py:2, bipy:1):").grid(row=2, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
+        # Ligands input
+        ttk.Label(frame, text="Ligands (Name:Count, e.g. py:2, h2o:4):")\
+            .grid(row=2, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
         self.ligand_var = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.ligand_var, width=60).grid(row=3, column=0, columnspan=2, sticky='ew', padx=5)
+        ttk.Entry(frame, textvariable=self.ligand_var, width=60)\
+            .grid(row=3, column=0, columnspan=2, sticky='ew', padx=5)
 
-        ttk.Label(frame, text="Geometry:").grid(row=4, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
-        self.geom_var = tk.StringVar()
-        ttk.Combobox(
-            frame,
-            textvariable=self.geom_var,
-            values=["octahedral", "tetrahedral", "square planar"],
-            state="readonly"
-        ).grid(row=5, column=0, columnspan=2, sticky='ew', padx=5)
+        self.ligand_sel_vars   = [tk.StringVar() for _ in range(6)]
+        self.ligand_count_vars = [tk.StringVar(value="1") for _ in range(6)]
 
-        ttk.Label(frame, text="Bond Length (for bulky ligands):").grid(row=6, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
+        for i in range(6):
+            ttk.Combobox(
+                frame,
+                textvariable=self.ligand_sel_vars[i],
+                values=self.ligand_names,
+                state="readonly"
+            ).grid(row=4 + i, column=0, sticky="ew", padx=5, pady=2)
+
+            ttk.Entry(
+                frame,
+                textvariable=self.ligand_count_vars[i],
+                width=5
+            ).grid(row=4 + i, column=1, sticky="ew", padx=5, pady=2)
+
+        # Bond length and draw button
+        ttk.Label(frame, text="Bond Length (for bulky ligands, adjust):")\
+            .grid(row=10, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
         self.bond_length_var = tk.StringVar(value="1.0")
-        ttk.Entry(frame, textvariable=self.bond_length_var).grid(row=7, column=0, columnspan=2, sticky='ew', padx=5)
+        ttk.Entry(frame, textvariable=self.bond_length_var)\
+            .grid(row=11, column=0, columnspan=2, sticky="ew", padx=5)
 
-        ttk.Button(frame, text="Draw Complex", command=self.draw_complex).grid(row=8, column=0, columnspan=2, sticky='ew', pady=10)
+        ttk.Button(frame, text="Draw Complex", command=self.draw_complex)\
+            .grid(row=12, column=0, columnspan=2, sticky="ew", pady=10)
 
-        self.canvas = tk.Canvas(frame, bg='white')
-        self.canvas.grid(row=9, column=0, columnspan=2, sticky='nsew', padx=5, pady=5)
-        frame.rowconfigure(9, weight=1)
-
+        # Canvas for drawing
+        self.canvas = tk.Canvas(frame, bg="white")
+        self.canvas.grid(row=13, column=0, columnspan=2, sticky="nsew", padx=5, pady=5)
+        frame.rowconfigure(13, weight=1)
 
     def init_orbital_tab(self):
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text="Orbital Splitting")
 
-        # Configure columns to expand evenly for centering
-        for i in range(3):
+        for i in range(4):
             frame.columnconfigure(i, weight=1)
 
         self.metal_orb_var = tk.StringVar()
-        self.oxstate_var = tk.StringVar()
+        self.orb_oxstate_var = tk.StringVar()
         self.selected_ligand = tk.StringVar()
         self.geom_orb_var = tk.StringVar()
-        self.lig_list_accum = {} 
+        self.lig_list_accum = {}
 
+        ttk.Label(frame, text="Metal:")\
+            .grid(row=1, column=0, columnspan=3, sticky='ew', padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.metal_orb_var)\
+            .grid(row=2, column=0, columnspan=3, sticky='ew', padx=5)
 
-        ttk.Label(frame, text="Metal:").grid(row=1, column=0, columnspan=3, sticky='ew', padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.metal_orb_var).grid(row=2, column=0, columnspan=3, sticky='ew', padx=5)
+        ttk.Label(frame, text="Oxidation State of Metal:")\
+            .grid(row=3, column=0, columnspan=3, sticky='ew', padx=5, pady=5)
+        ttk.Entry(frame, textvariable=self.orb_oxstate_var)\
+            .grid(row=4, column=0, columnspan=3, sticky='ew', padx=5)
 
-        ttk.Label(frame, text="Oxidation State of Metal:").grid(row=3, column=0, columnspan=3, sticky='ew', padx=5, pady=5)
-        ttk.Entry(frame, textvariable=self.oxstate_var).grid(row=4, column=0, columnspan=3, sticky='ew', padx=5)
-
-        ttk.Label(frame, text="Select Ligand:").grid(row=5, column=0, columnspan=3, sticky='ew', padx=5, pady=5)
-        self.ligand_dropdown = ttk.Combobox(frame, textvariable=self.selected_ligand, values=self.ligand_names, state="readonly")
-        self.ligand_count_var = tk.StringVar(value="1")
-        ttk.Entry(frame, textvariable=self.ligand_count_var, width=5).grid(row=6, column=2, padx=5)
+        ttk.Label(frame, text="Select Ligand:")\
+            .grid(row=5, column=0, columnspan=3, sticky='ew', padx=5, pady=5)
+        self.ligand_dropdown = ttk.Combobox(
+            frame, textvariable=self.selected_ligand, values=self.ligand_names, state="readonly"
+        )
         self.ligand_dropdown.grid(row=6, column=0, columnspan=2, sticky='ew', padx=5)
-        ttk.Button(frame, text="Add Ligand", command=self.add_ligand).grid(row=6, column=2, sticky='ew', padx=5)
+        self.ligand_count_var = tk.StringVar(value="1")
+        ttk.Entry(frame, textvariable=self.ligand_count_var, width=5)\
+            .grid(row=6, column=2, padx=5)
+        ttk.Button(frame, text="Add Ligand", command=self.add_ligand)\
+            .grid(row=6, column=3, sticky='ew', padx=5)
 
-        ttk.Label(frame, text="Ligands Selected:").grid(row=7, column=0, columnspan=3, sticky='ew', padx=5)
+        ttk.Label(frame, text="Ligands Selected:")\
+            .grid(row=7, column=0, columnspan=4, sticky='ew', padx=5)
         self.lig_list_display = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.lig_list_display, state="readonly", width=60).grid(row=8, column=0, columnspan=3, sticky='ew', padx=5)
+        ttk.Entry(frame, textvariable=self.lig_list_display, width=60)\
+            .grid(row=8, column=0, columnspan=4, sticky='ew', padx=5)
 
-        ttk.Label(frame, text="Geometry:").grid(row=9, column=0, columnspan=3, sticky='ew', padx=5, pady=5)
+        ttk.Label(frame, text="Geometry:")\
+            .grid(row=9, column=0, columnspan=4, sticky='ew', padx=5, pady=5)
         ttk.Combobox(
             frame,
             textvariable=self.geom_orb_var,
             values=["octahedral", "tetrahedral", "square planar"],
             state="readonly"
-        ).grid(row=10, column=0, columnspan=3, sticky='ew', padx=5)
+        ).grid(row=10, column=0, columnspan=4, sticky='ew', padx=5)
 
-        ttk.Button(frame, text="Compute Orbital Splitting", command=self.compute_orbital).grid(row=11, column=0, columnspan=3, sticky='ew', pady=10)
+        ttk.Button(frame, text="Compute Orbital Splitting", command=self.compute_orbital)\
+            .grid(row=11, column=0, columnspan=4, sticky='ew', pady=10)
 
     def init_info_tab(self):
         frame = ttk.Frame(self.notebook)
@@ -130,14 +180,95 @@ class CoordinationGUI(tk.Tk):
             frame.columnconfigure(i, weight=1)
 
         self.lookup_var = tk.StringVar()
-        ttk.Label(frame, text="Enter Metal or Ligand Name:").grid(row=0, column=0, columnspan=2, sticky='ew', pady=10)
-        ttk.Entry(frame, textvariable=self.lookup_var).grid(row=1, column=0, columnspan=2, sticky='ew', padx=10)
+        ttk.Label(frame, text="Select Metal or Ligand:")\
+            .grid(row=0, column=0, columnspan=2, sticky='ew', pady=10)
+        ttk.Combobox(
+            frame,
+            textvariable=self.lookup_var,
+            values=self.lookup_values,
+            state="readonly"
+        ).grid(row=1, column=0, columnspan=2, sticky='ew', padx=10)
 
-        ttk.Button(frame, text="Lookup Info", command=self.lookup_info).grid(row=2, column=0, columnspan=2, sticky='ew', padx=20, pady=10)
+        ttk.Button(frame, text="Lookup Info", command=self.lookup_info)\
+            .grid(row=2, column=0, columnspan=2, sticky='ew', padx=20, pady=10)
 
         self.info_display = tk.Text(frame, height=20, bg='#3a3a3a', fg='white', wrap='word')
         self.info_display.grid(row=3, column=0, columnspan=2, sticky='nsew', padx=10, pady=10)
         frame.rowconfigure(3, weight=1)
+
+    def add_ligand(self):
+        ligand = self.selected_ligand.get()
+        try:
+            count = int(self.ligand_count_var.get())
+        except ValueError:
+            count = 1
+        if ligand:
+            self.lig_list_accum[ligand] = self.lig_list_accum.get(ligand, 0) + count
+            display = ", ".join(f"{k} × {v}" for k, v in self.lig_list_accum.items())
+            self.lig_list_display.set(display)
+
+    def draw_complex(self):
+        try:
+            # 1. Get metal and oxidation state
+            metal = self.metal_var.get()
+            ox_state = int(self.oxstate_var.get() or "0")
+
+            # 2. Build ligand_counts dict
+            ligand_counts = {}
+            for sel_var, cnt_var in zip(self.ligand_sel_vars, self.ligand_count_vars):
+                name = sel_var.get()
+                if name:
+                    try:
+                        cnt = int(cnt_var.get())
+                    except ValueError:
+                        cnt = 1
+                    denticity = get_donor_atom_indices(
+                        load_ligands_from_folder(LIGAND_FOLDER)[name]
+                    )
+                    max_allowed = 6 if len(denticity) == 1 else 3
+                    if cnt > max_allowed:
+                        cnt = max_allowed
+                        cnt_var.set(str(max_allowed))
+                    ligand_counts[name] = ligand_counts.get(name, 0) + cnt
+
+            # 3. Determine geometry
+            lig_map = load_ligands_from_folder(LIGAND_FOLDER)
+            total_sites = sum(
+                len(get_donor_atom_indices(lig_map[name])) * cnt
+                for name, cnt in ligand_counts.items()
+            )
+            if total_sites == 4:
+                metal_smiles = f"[{metal}]"
+                ligand_smiles_list = [
+                    MolToSmiles(lig_map[name]) for name, cnt in ligand_counts.items() for _ in range(cnt)
+                ]
+                geometry = predict_4coordinate_geometry(metal_smiles, ligand_smiles_list)
+            elif total_sites == 6:
+                geometry = "octahedral"
+            else:
+                raise ValueError(f"Unsupported total donor sites: {total_sites}")
+
+            # 4. Draw the complex
+            bond_length = float(self.bond_length_var.get() or "1.0")
+            img = create_complex_from_ligand_dict(
+                metal,
+                ligand_counts,
+                geometry,
+                bond_length=bond_length,
+                oxidation_state=ox_state
+            )
+
+            # 5. Resize & display
+            resized_img = img.resize((400, 400), Image.Resampling.LANCZOS)
+            self.photo = ImageTk.PhotoImage(resized_img)
+            self.canvas.delete("all")
+            w, h = self.canvas.winfo_width(), self.canvas.winfo_height()
+            x = (w - 400) // 2
+            y = (h - 400) // 2
+            self.canvas.create_image(x, y, anchor='nw', image=self.photo)
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def lookup_info(self):
         import io, sys, os
@@ -150,7 +281,6 @@ class CoordinationGUI(tk.Tk):
             self.info_display.insert(tk.END, "⚠️ Please enter a name.")
             return
 
-        # Load ligand data as RDKit Mol objects
         sdf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "all_ligands.sdf"))
         data = load_ligand_data(sdf_path)
 
@@ -176,42 +306,6 @@ class CoordinationGUI(tk.Tk):
 
         self.info_display.insert(tk.END, buf.getvalue())
 
-
-
-    def add_ligand(self):
-        ligand = self.selected_ligand.get()
-        try:
-            count = int(self.ligand_count_var.get())
-        except ValueError:
-            count = 1
-        if ligand:
-            self.lig_list_accum[ligand] = self.lig_list_accum.get(ligand, 0) + count
-            display = ", ".join(f"{k} × {v}" for k, v in self.lig_list_accum.items())
-            self.lig_list_display.set(display)
-
-
-    def draw_complex(self):
-        try:
-            metal = self.metal_var.get()
-            geometry = self.geom_var.get().replace(' ', '_')
-            ligand_counts = {
-                name.strip(): int(cnt)
-                for part in self.ligand_var.get().split(',')
-                if ':' in part for name, cnt in [part.split(':')]
-            }
-            
-            bond_length = float(self.bond_length_var.get() or "1.0")
-            img = create_complex_from_ligand_dict(metal, ligand_counts, geometry, bond_length=bond_length)
-            resized_img = img.resize((400, 400), Image.Resampling.LANCZOS)
-            self.photo = ImageTk.PhotoImage(resized_img)
-            self.canvas.update_idletasks()
-            w, h = self.canvas.winfo_width(), self.canvas.winfo_height()
-            self.canvas.delete("all")
-            self.canvas.create_image(w/2, h/2, image=self.photo, anchor='center')
-
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-
     def compute_orbital(self):
         import io, sys, os
         old_stdout = sys.stdout
@@ -219,11 +313,10 @@ class CoordinationGUI(tk.Tk):
 
         try:
             metal_sym = self.metal_orb_var.get()
-            ox_state = int(self.oxstate_var.get())
+            ox_state = int(self.orb_oxstate_var.get())
             lig_counts = self.lig_list_accum
             geom = self.geom_orb_var.get()
 
-            # Correct path: all_ligands.sdf is in the repo root
             sdf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "all_ligands.sdf"))
             data = orbital.load_ligand_data(sdf_path)
             metal = orbital.get_metal_data(metal_sym)
